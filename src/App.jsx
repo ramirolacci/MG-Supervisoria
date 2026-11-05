@@ -552,10 +552,11 @@ export default function App() {
     setFormInputs((prev) => {
       const next = { ...prev };
       itemsToApply.forEach((item) => {
+        const current = next[item.store.id] || { rc: '', rv: '', ru: '' };
         next[item.store.id] = {
-          rc: item.rc,
-          rv: item.rv,
-          ru: item.ru,
+          rc: item.hasComandas ? item.rc : current.rc,
+          rv: item.hasVenta ? item.rv : current.rv,
+          ru: item.hasUnidades ? item.ru : current.ru,
         };
       });
       return next;
@@ -570,7 +571,7 @@ export default function App() {
     });
 
     showToast(
-      `¡Se completaron ${itemsToApply.length} sucursales desde el Excel! Verificá y hacé clic en Guardar.`,
+      `¡Se completaron datos de ${itemsToApply.length} sucursales desde el Excel! Verificá y hacé clic en Guardar.`,
       'success'
     );
   };

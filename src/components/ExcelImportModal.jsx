@@ -13,6 +13,9 @@ import {
   DollarSign,
   ArrowRight,
   ShieldAlert,
+  Layers,
+  Calendar,
+  AlertTriangle,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { parseExcelData } from '../lib/excelImport';
@@ -72,29 +75,29 @@ export function ExcelImportModal({
     e.stopPropagation();
     setDragActive(false);
 
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      processFile(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processFiles(Array.from(e.dataTransfer.files));
     }
   };
 
   const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      processFile(e.target.files[0]);
+    if (e.target.files && e.target.files.length > 0) {
+      processFiles(Array.from(e.target.files));
     }
   };
 
-  const processFile = async (file) => {
+  const processFiles = async (fileList) => {
     setErrorMsg('');
     setIsProcessing(true);
 
     try {
-      const result = await parseExcelData(file, allStores, activeStoreIds);
+      const result = await parseExcelData(fileList, allStores, activeStoreIds);
       setParseResult(result);
       // Por defecto seleccionamos todas las tiendas activas coincidentes
       setSelectedStoreIds(new Set(result.matchedActive.map((item) => item.store.id)));
     } catch (err) {
-      console.error('Error procesando Excel:', err);
-      setErrorMsg(err.message || 'No se pudo leer el archivo Excel.');
+      console.error('Error procesando archivos Excel:', err);
+      setErrorMsg(err.message || 'No se pudieron leer los archivos seleccionados.');
       setParseResult(null);
     } finally {
       setIsProcessing(false);
@@ -197,9 +200,9 @@ export function ExcelImportModal({
             </div>
             <div>
               <h3 className="text-base sm:text-xl font-black text-white tracking-tight flex items-center gap-2">
-                <span>Importación Inteligente de Excel</span>
+                <span>Importación Inteligente DataLive / Excel</span>
                 <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                  Carga Rápida
+                  Multiformato
                 </span>
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">
@@ -224,22 +227,9 @@ export function ExcelImportModal({
             <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs sm:text-sm space-y-3">
               <div className="flex items-center gap-2.5 font-bold text-amber-300">
                 <AlertCircle className="w-5 h-5 shrink-0 text-amber-400" />
-                <span>Atención con el formato del archivo</span>
+                <span>Atención al leer el archivo</span>
               </div>
               <p className="text-slate-300 text-xs leading-relaxed">{errorMsg}</p>
-              <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 space-y-2 text-xs">
-                <p className="font-extrabold text-white flex items-center gap-1.5">
-                  <span>💡 ¿Cómo solucionarlo rápidamente?</span>
-                </p>
-                <div className="space-y-1.5 text-slate-300">
-                  <p>
-                    <strong>Opción A (Recomendada):</strong> En Excel, andá a <em>Archivo ➔ Guardar como</em> y en el desplegable de Tipo elegí <strong className="text-amber-400">«Libro de Excel (*.xlsx)»</strong>. Luego arrastrá ese archivo.
-                  </p>
-                  <p>
-                    <strong>Opción B (Directa):</strong> En tu carpeta de Descargas, entrá a la carpeta <code className="text-emerald-300">Reporte_ventas (4)_archivos</code> y arrastrá el archivo <strong className="text-emerald-300">sheet001.htm</strong> aquí.
-                  </p>
-                </div>
-              </div>
             </div>
           )}
 
@@ -262,6 +252,7 @@ export function ExcelImportModal({
                   ref={fileInputRef}
                   type="file"
                   accept=".xlsx, .xls, .csv, .htm, .html"
+                  multiple
                   onChange={handleFileChange}
                   className="hidden"
                 />
@@ -276,16 +267,27 @@ export function ExcelImportModal({
 
                 <div>
                   <p className="text-base sm:text-lg font-bold text-white group-hover:text-amber-400 transition">
-                    {isProcessing ? 'Analizando archivo...' : 'Arrastrá tu archivo Excel aquí o hacé clic para buscar'}
+                    {isProcessing
+                      ? 'Analizando archivos de DataLive...'
+                      : 'Arrastrá tus reportes de DataLive aquí (o hacé clic)'}
                   </p>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Formatos soportados: <span className="text-slate-300 font-mono">.xlsx</span>, <span className="text-slate-300 font-mono">.xls</span>, <span className="text-slate-300 font-mono">.csv</span>, <span className="text-slate-300 font-mono">.htm</span>
+                  <p className="text-xs text-slate-400 mt-1 max-w-lg mx-auto">
+                    Podés soltar <strong>juntos o por separado</strong> el <span className="text-amber-300 font-semibold">Reporte de Ventas</span> (comandas y ventas) y el <span className="text-purple-300 font-semibold">Reporte de Productos</span> (unidades de empanadas).
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 text-[11px] text-slate-500 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 mt-2">
-                  <FileCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Reconoce automáticamente columnas de <strong>SUCURSAL</strong>, <strong>COMANDAS</strong>, <strong>VENTAS</strong> y <strong>UNIDADES</strong></span>
+                <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-slate-400 bg-slate-900/90 px-3.5 py-2 rounded-2xl border border-slate-800 mt-1">
+                  <span className="flex items-center gap-1 text-emerald-400 font-semibold">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Reporte_ventas (.xls / .xlsx)</span>
+                  </span>
+                  <span className="text-slate-600">•</span>
+                  <span className="flex items-center gap-1 text-purple-400 font-semibold">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Reporte_productos_VENTAS (.xls)</span>
+                  </span>
+                  <span className="text-slate-600">•</span>
+                  <span className="text-slate-400">Archivos múltiples soportados</span>
                 </div>
               </div>
 
@@ -315,14 +317,14 @@ export function ExcelImportModal({
                 <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-950 border border-slate-800 shadow-inner">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                      <FileSpreadsheet className="w-5 h-5" />
+                      <Layers className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs sm:text-sm font-bold text-white truncate" title={parseResult.fileName}>
                         {parseResult.fileName}
                       </p>
                       <p className="text-[11px] text-slate-400">
-                        {(parseResult.fileSize / 1024).toFixed(1)} KB · {parseResult.summary.totalDetected} sucursales detectadas
+                        {parseResult.fileSummaries?.map((f) => `${f.fileName} (${f.detectedMetric})`).join(' · ') || `${(parseResult.fileSize / 1024).toFixed(1)} KB`}
                       </p>
                     </div>
                   </div>
@@ -353,22 +355,36 @@ export function ExcelImportModal({
                   </div>
 
                   {/* Compact badges for other or unmatched if any */}
-                  {(parseResult.matchedOther.length > 0 || parseResult.unmatched.length > 0) && (
+                  {(parseResult.matchedOther.length > 0 || parseResult.skipped.length > 0) && (
                     <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-mono-numbers shrink-0">
                       {parseResult.matchedOther.length > 0 && (
                         <span className="px-2 py-1 rounded-lg bg-slate-800/90 text-slate-400 border border-slate-700/60" title="Sucursales de otras supervisoras">
                           {parseResult.matchedOther.length} otras
                         </span>
                       )}
-                      {parseResult.unmatched.length > 0 && (
-                        <span className="px-2 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30" title="Filas no identificadas">
-                          {parseResult.unmatched.length} omitidas
+                      {parseResult.skipped.length > 0 && (
+                        <span className="px-2 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30" title="Ignoradas (cerradas/viejas)">
+                          {parseResult.skipped.length} omitidas
                         </span>
                       )}
                     </div>
                   )}
                 </div>
               </div>
+
+              {/* Date Mismatch Warning if detected date differs from selectedFecha */}
+              {parseResult.detectedDates && parseResult.detectedDates.length > 0 && (
+                parseResult.detectedDates.some((d) => d !== selectedFecha) && (
+                  <div className="p-3 sm:p-3.5 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-200 text-xs flex items-center gap-2.5">
+                    <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                    <span>
+                      <strong>Atención con la fecha:</strong> El archivo indica fecha{' '}
+                      <strong>{parseResult.detectedDates.map(formatFechaDDMMAAAA).join(', ')}</strong> y estás cargando el día{' '}
+                      <strong>{formatFechaDDMMAAAA(selectedFecha)}</strong>.
+                    </span>
+                  </div>
+                )
+              )}
 
               {/* KPI Totals Preview */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-950 border border-slate-800 font-mono-numbers">
@@ -438,26 +454,34 @@ export function ExcelImportModal({
                             <p className="font-extrabold text-white text-xs sm:text-sm truncate">
                               {item.store.name}
                             </p>
-                            {item.rawSucursal !== item.store.name && (
-                              <p className="text-[10px] text-slate-500 truncate">
-                                En Excel: &quot;{item.rawSucursal}&quot;
-                              </p>
-                            )}
+                            <p className="text-[10px] text-slate-500 truncate">
+                              {item.sources && item.sources.length > 0
+                                ? `Fuentes: ${item.sources.join(' + ')}`
+                                : item.rawSucursal !== item.store.name
+                                ? `En Excel: "${item.rawSucursal}"`
+                                : ''}
+                            </p>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-3 sm:gap-6 shrink-0 text-right">
                           <div>
                             <span className="text-[10px] text-slate-500 block font-sans">CMDAS.</span>
-                            <span className="font-bold text-slate-200">{item.rc || '0'}</span>
+                            <span className="font-bold text-slate-200">
+                              {item.hasComandas ? item.rc : <span className="text-slate-600">–</span>}
+                            </span>
                           </div>
                           <div>
                             <span className="text-[10px] text-slate-500 block font-sans">VENTA</span>
-                            <span className="font-extrabold text-emerald-400">${item.rv || '0'}</span>
+                            <span className="font-extrabold text-emerald-400">
+                              {item.hasVenta ? `$${item.rv}` : <span className="text-slate-600">–</span>}
+                            </span>
                           </div>
                           <div>
                             <span className="text-[10px] text-slate-500 block font-sans">UNID.</span>
-                            <span className="font-bold text-slate-200">{item.ru || '0'}</span>
+                            <span className="font-bold text-slate-200">
+                              {item.hasUnidades ? item.ru : <span className="text-slate-600">–</span>}
+                            </span>
                           </div>
                         </div>
                       </div>

@@ -1,0 +1,810 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Carga Diaria Mi Gusto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: una columna para el celular; selector de supervisora y fecha, planilla del día con una fila por tienda, envío, registro mensual y configuración */
+:root {
+  --bg: #f3f4f6;
+  --surface: #ffffff;
+  --surface-2: #eceef2;
+  --fg: #1c2230;
+  --muted: #5c6577;
+  --line: #d8dce4;
+  --accent: #a8321f;
+  --accent-soft: #f6e3df;
+  --ok: #1f7a4a;
+  --ok-soft: #dcf1e5;
+  --warn: #9a6200;
+  --warn-soft: #fbedd2;
+  --bad: #b3261e;
+  --bad-soft: #fbe1df;
+  --font-display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12151c; --surface: #1b1f29; --surface-2: #252a36; --fg: #e8ebf1; --muted: #9aa3b5; --line: #323848;
+    --accent: #f0806a; --accent-soft: #3a2420;
+    --ok: #5fd193; --ok-soft: #173326; --warn: #f2bd5a; --warn-soft: #3a2d14; --bad: #ff8a80; --bad-soft: #3d1f1d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12151c; --surface: #1b1f29; --surface-2: #252a36; --fg: #e8ebf1; --muted: #9aa3b5; --line: #323848;
+  --accent: #f0806a; --accent-soft: #3a2420;
+  --ok: #5fd193; --ok-soft: #173326; --warn: #f2bd5a; --warn-soft: #3a2d14; --bad: #ff8a80; --bad-soft: #3d1f1d;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.4; }
+.wrap { max-width: 860px; margin: 0 auto; padding-inline: 16px; padding-block: 8px 48px; }
+.num { font-variant-numeric: tabular-nums; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:disabled { opacity: .55; cursor: default; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+h1 { font-family: var(--font-display); font-weight: 700; font-size: 2rem; margin: 14px 0 2px; letter-spacing: .01em; text-wrap: balance; }
+.lead { color: var(--muted); margin: 0 0 14px; font-size: .95rem; }
+h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.45rem; margin: 30px 0 10px; text-transform: uppercase; letter-spacing: .02em; text-wrap: balance; }
+h3 { font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; margin: 6px 0 0; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.banner { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--warn-soft); color: var(--warn); font-size: .92rem; display: grid; gap: 4px; }
+.banner strong { font-size: 1rem; }
+
+.field { display: grid; gap: 5px; min-width: 0; }
+.field > span { font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.field input, .field select { font: inherit; font-size: 1.05rem; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); width: 100%; min-width: 0; min-height: 48px; }
+.pick { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.pick .field select { font-weight: 700; }
+
+/* Barra fija del día */
+.daybar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); margin-inline: -16px; padding: 10px 16px 8px; border-bottom: 1px solid var(--line); display: grid; gap: 4px; }
+.daybar-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.daybar-title { font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; letter-spacing: .02em; }
+.daybar-count { font-weight: 700; font-size: .95rem; }
+.daytot { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: .9rem; color: var(--muted); }
+.daytot b { color: var(--fg); font-family: var(--font-display); font-size: 1.1rem; }
+
+/* Filas de tienda */
+.sheet { display: grid; gap: 10px; margin-top: 12px; }
+.trow { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 10px; }
+.trow.s-ok { box-shadow: inset 4px 0 0 var(--ok); }
+.trow.s-dirty { box-shadow: inset 4px 0 0 var(--warn); }
+.trow.s-err { box-shadow: inset 4px 0 0 var(--bad); }
+.trow-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.tk { font-family: var(--font-display); font-weight: 700; font-size: 1rem; color: var(--accent); white-space: nowrap; margin-left: auto; }
+.tname { font-weight: 700; font-size: 1.05rem; min-width: 0; overflow-wrap: anywhere; }
+.pill { font-family: var(--font-display); font-weight: 700; font-size: .85rem; letter-spacing: .05em; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; white-space: nowrap; background: var(--surface-2); color: var(--muted); }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+.tin { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 8px; }
+.tin label { display: grid; gap: 3px; min-width: 0; }
+.tin label span { font-size: .72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.tin input { font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); width: 100%; min-width: 0; min-height: 46px; font-variant-numeric: tabular-nums; }
+.tin input.bad { border-color: var(--bad); }
+.tmeta { font-size: .85rem; color: var(--muted); min-height: 1.1em; }
+.tmeta.err { color: var(--bad); }
+.group-title { margin-top: 8px; }
+
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+.btn { border: 0; border-radius: 10px; padding: 12px 18px; font-weight: 700; background: var(--accent); color: var(--surface); min-height: 48px; }
+.btn.ghost { background: var(--surface); color: var(--fg); border: 1px solid var(--line); }
+.btn.danger { background: var(--bad); color: var(--surface); }
+.btn.sm { padding: 6px 10px; min-height: 38px; font-size: .88rem; border-radius: 8px; }
+.toast { font-size: .95rem; color: var(--ok); font-weight: 600; margin: 10px 0 0; min-height: 1.3em; }
+.toast.err { color: var(--bad); }
+#copyBox { width: 100%; min-height: 160px; margin-top: 10px; font: inherit; font-size: .9rem; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--fg); }
+
+/* Mes */
+.month-bar { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
+.month-bar .field { flex: 0 1 200px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 2px; min-width: 0; }
+.kpi span { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.kpi b { font-family: var(--font-display); font-weight: 700; font-size: 1.6rem; line-height: 1.1; overflow-wrap: anywhere; }
+.kpi small { font-size: .8rem; color: var(--muted); }
+.tbl-wrap { overflow-x: auto; margin-top: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+th, td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+th:first-child, td:first-child { text-align: left; }
+th { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; background: var(--surface-2); }
+tbody tr:last-child td { border-bottom: 0; }
+tfoot td { font-weight: 700; border-top: 2px solid var(--line); border-bottom: 0; }
+tr.sub td { background: var(--surface-2); font-weight: 700; }
+td.c-ok { color: var(--ok); font-weight: 700; }
+td.c-warn { color: var(--warn); font-weight: 700; }
+td.c-bad { color: var(--bad); font-weight: 700; }
+.rk { display: inline-grid; place-items: center; min-width: 26px; height: 26px; border-radius: 13px; font-family: var(--font-display); font-weight: 700; font-size: .95rem; background: var(--surface-2); color: var(--muted); padding: 0 6px; }
+.rk.r1 { background: var(--accent); color: var(--surface); }
+.rk.r2, .rk.r3 { background: var(--accent-soft); color: var(--accent); }
+td.rkc { width: 44px; text-align: center; }
+.tcell { display: grid; gap: 4px; min-width: 150px; text-align: left; }
+.tcell small { color: var(--muted); font-size: .8rem; }
+.bar { height: 5px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+td.hl { font-weight: 700; color: var(--fg); background: var(--accent-soft); }
+tr.pend td { color: var(--muted); }
+.rank-bar { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; justify-content: space-between; }
+.rank-bar .field { flex: 0 1 220px; }
+.empty { padding: 18px 14px; color: var(--muted); font-size: .93rem; white-space: normal; text-align: left; }
+
+/* Importar */
+.imp { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+.imp .note { flex: 1 1 260px; }
+.impres { margin-top: 12px; padding: 12px 14px; border-radius: 10px; background: var(--surface-2); font-size: .92rem; display: grid; gap: 6px; }
+.impres b { font-weight: 700; }
+.impres .w { color: var(--warn); }
+.impres .ok { color: var(--ok); }
+
+/* Configuración */
+.cfg { display: grid; gap: 8px; }
+.cfg-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.cfg-row input, .cfg-row select { font: inherit; font-size: 1rem; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); min-width: 0; min-height: 42px; }
+.cfg-row input { flex: 1 1 180px; }
+.cfg-row select { flex: 0 1 200px; }
+.note { font-size: .9rem; color: var(--muted); margin: 8px 0 0; }
+@media (max-width: 380px) { .tin input { font-size: 1.1rem; padding: 8px 6px; } }
+</style>
+
+<div class="wrap">
+  <h1>Carga diaria por supervisora</h1>
+  <p class="lead">Comandas, venta y unidades de cada tienda, a día vencido. Cargá todas tus tiendas, guardá y mandá el resumen.</p>
+  <div class="banner" id="banner" role="status" hidden></div>
+
+  <section class="card" style="margin-top:12px">
+    <div class="pick">
+      <label class="field" for="fSup"><span>Supervisora</span><select id="fSup"><option value="">Cargando…</option></select></label>
+      <label class="field" for="fFecha"><span>Día a cargar</span><input id="fFecha" type="date"></label>
+    </div>
+    <div class="imp">
+      <p class="note" style="margin:0">¿El sistema te da los datos en Excel? Subí los archivos de <b>comandas</b>, <b>ventas</b> y <b>unidades</b> (juntos o de a uno): se completan solos en cada tienda del día elegido.</p>
+      <button class="btn ghost" id="impBtn" type="button">Importar Excel</button>
+      <input type="file" id="impFile" accept=".xls,.xlsx,.csv,.html,.htm" multiple hidden>
+    </div>
+    <div class="impres" id="impRes" hidden></div>
+  </section>
+
+  <div class="daybar" id="daybar">
+    <div class="daybar-row">
+      <span class="daybar-title num" id="dayTitle">–</span>
+      <span class="daybar-count num" id="dayCount"></span>
+    </div>
+    <div class="daytot num" id="dayTot"></div>
+  </div>
+
+  <div class="sheet" id="sheet"></div>
+
+  <div class="actions">
+    <button class="btn" id="saveBtn" type="button">Guardar día</button>
+    <button class="btn ghost" id="waBtn" type="button">Copiar para WhatsApp</button>
+    <button class="btn ghost" id="dayCsvBtn" type="button" hidden>Descargar día (Excel)</button>
+    <button class="btn ghost" id="discardBtn" type="button" hidden>Descartar cambios</button>
+  </div>
+  <p class="toast" id="toast" role="status"></p>
+  <textarea id="copyBox" hidden readonly aria-label="Resumen para copiar"></textarea>
+
+  <h2>Ranking del día</h2>
+  <div class="rank-bar">
+    <p class="note" id="rankDayNote" style="margin:0"></p>
+    <label class="field" for="fMetric"><span>Ordenar ranking por</span>
+      <select id="fMetric">
+        <option value="v">Venta</option>
+        <option value="c">Comandas</option>
+        <option value="u">Unidades</option>
+        <option value="t">Ticket promedio de la tienda</option>
+      </select>
+    </label>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Tienda</th><th>Comandas</th><th>Venta</th><th>Unidades</th><th>Ticket prom.</th></tr></thead>
+      <tbody id="rankDayBody"></tbody>
+    </table>
+  </div>
+
+  <h2>Registro mensual</h2>
+  <div class="month-bar">
+    <label class="field" for="fMes"><span>Mes</span><input id="fMes" type="month"></label>
+    <button class="btn ghost" id="monthCsvBtn" type="button" hidden>Descargar mes (Excel)</button>
+  </div>
+  <div class="kpis num" id="kpis"></div>
+
+  <div id="supRankWrap" hidden>
+    <h3 style="margin-top:18px">Ranking por supervisora</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Supervisora</th><th>Cargas</th><th>Comandas</th><th>Venta</th><th>Unidades</th></tr></thead>
+        <tbody id="supRankBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3 style="margin-top:18px">Ranking del mes por tienda</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Tienda</th><th>Días cargados</th><th>Comandas</th><th>Venta</th><th>Unidades</th><th>Ticket prom.</th><th>Unid./comanda</th></tr></thead>
+      <tbody id="storeBody"></tbody>
+      <tfoot id="storeFoot"></tfoot>
+    </table>
+  </div>
+
+  <h3 style="margin-top:18px">Por día</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Día</th><th>Tiendas cargadas</th><th>Comandas</th><th>Venta</th><th>Unidades</th></tr></thead>
+      <tbody id="daysBody"></tbody>
+    </table>
+  </div>
+
+  <section id="adminSec" hidden>
+    <h2>Supervisoras y tiendas</h2>
+    <div class="card">
+      <h3 style="margin-top:0">Supervisoras</h3>
+      <div class="cfg" id="supList" style="margin-top:8px"></div>
+      <div class="cfg-row" style="margin-top:10px">
+        <input id="newSup" type="text" placeholder="Nombre de la supervisora" aria-label="Nombre de la nueva supervisora" autocomplete="off">
+        <button class="btn sm" id="addSup" type="button">Agregar supervisora</button>
+      </div>
+
+      <h3 style="margin-top:22px">Tiendas</h3>
+      <div class="cfg" id="tiendaList" style="margin-top:8px"></div>
+      <div class="cfg-row" style="margin-top:10px">
+        <input id="newTienda" type="text" placeholder="Nombre de la tienda" aria-label="Nombre de la nueva tienda" autocomplete="off">
+        <select id="newTiendaSup" aria-label="Supervisora a cargo de la nueva tienda"></select>
+        <button class="btn sm" id="addTienda" type="button">Agregar tienda</button>
+      </div>
+      <p class="note">Solo vos y quienes tengan permiso de Editor ven esta sección. Para pasar una tienda a otra supervisora, cambiala en el selector: su historial se conserva.</p>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const ARS = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+const INT = new Intl.NumberFormat("es-AR");
+const DEC = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const WD = new Intl.DateTimeFormat("es-AR", { weekday: "short" });
+const WDL = new Intl.DateTimeFormat("es-AR", { weekday: "long" });
+const MONTHF = new Intl.DateTimeFormat("es-AR", { month: "long", year: "numeric" });
+const LS_SUP = "carga-diaria-supervisora";
+const ALL = "__all";
+
+const pad = n => String(n).padStart(2, "0");
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseYmd = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const todayStr = () => ymd(new Date());
+const YDAY = (() => { const d = new Date(); d.setDate(d.getDate() - 1); return ymd(d); })();
+const fmtDay = s => { const d = parseYmd(s); return `${WD.format(d).replace(".", "")} ${pad(d.getDate())}/${pad(d.getMonth() + 1)}`; };
+const fmtDayLong = s => { const d = parseYmd(s); const w = WDL.format(d); return `${w.charAt(0).toUpperCase() + w.slice(1)} ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`; };
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const newId = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+function parseMoney(raw) {
+  let s = String(raw || "").replace(/[\s$]/g, "");
+  if (!s) return NaN;
+  if (s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
+  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, "");
+  return /^\d+(\.\d{1,2})?$/.test(s) ? Number(s) : NaN;
+}
+function parseCount(raw) { const s = String(raw || "").replace(/[\s.]/g, ""); return /^\d+$/.test(s) ? Number(s) : NaN; }
+
+let db = null, dl = null, myId = null, canWrite = null, isAdmin = false;
+let cfg = { supervisoras: [], tiendas: [] };
+let sup = "", fecha = YDAY;
+let dayData = new Map();   // tiendaId -> registro guardado del día
+let monthRows = [];
+const dirty = new Set();
+let unsubDay = null, unsubMonth = null;
+
+/* ---------- Mensajes ---------- */
+function flash(msg, err) { const t = $("toast"); t.textContent = msg; t.classList.toggle("err", !!err); clearTimeout(flash.t); flash.t = setTimeout(() => t.textContent = "", err ? 7000 : 3500); }
+function banner(title, text) { const b = $("banner"); b.hidden = false; b.innerHTML = `<strong>${esc(title)}</strong><span>${esc(text)}</span>`; }
+
+/* ---------- Alcance ---------- */
+const supName = id => (cfg.supervisoras.find(s => s.id === id) || {}).name || "Sin supervisora";
+const tiendaName = id => (cfg.tiendas.find(t => t.id === id) || {}).name || (monthRows.find(r => r.tiendaId === id) || {}).tiendaNombre || "Tienda";
+function scopeTiendas() { return sup === ALL ? cfg.tiendas.slice() : cfg.tiendas.filter(t => t.sup === sup); }
+function scopeLabel() { return sup === ALL ? "Todas las supervisoras" : supName(sup); }
+
+/* ---------- Selectores ---------- */
+function fillSupSelect() {
+  const sel = $("fSup");
+  let saved = ""; try { saved = localStorage.getItem(LS_SUP) || ""; } catch (e) {}
+  const want = sup || saved;
+  const opts = cfg.supervisoras.map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
+  if (!cfg.supervisoras.length) {
+    sel.innerHTML = `<option value="">Sin supervisoras cargadas</option>`; sup = "";
+  } else {
+    sel.innerHTML = `<option value="">Elegí tu nombre</option>${opts}<option value="${ALL}">Todas (vista general)</option>`;
+    sup = (want === ALL || cfg.supervisoras.some(s => s.id === want)) ? want : "";
+    sel.value = sup;
+  }
+}
+$("fSup").addEventListener("change", e => {
+  if (dirty.size) { e.target.value = sup; flash("Tenés cambios sin guardar. Guardá o descartá antes de cambiar de supervisora.", true); return; }
+  sup = e.target.value; try { localStorage.setItem(LS_SUP, sup); } catch (err) {}
+  buildSheet(); syncSheet(); renderMonth();
+});
+$("fFecha").addEventListener("change", e => {
+  const v = e.target.value;
+  if (dirty.size) { e.target.value = fecha; flash("Tenés cambios sin guardar. Guardá o descartá antes de cambiar de día.", true); return; }
+  if (!v || v >= todayStr()) { e.target.value = fecha; flash("Elegí un día ya cerrado (ayer o antes).", true); return; }
+  fecha = v; subscribeDay(); buildSheet(); syncSheet();
+});
+
+/* ---------- Planilla del día ---------- */
+function rowHtml(t) {
+  return `<div class="trow" data-t="${esc(t.id)}">
+    <div class="trow-head"><span class="tname">${esc(t.name)}</span><span class="tk num" data-tk></span><span class="pill" data-st>Pendiente</span></div>
+    <div class="tin">
+      <label><span>Comandas</span><input id="c_${esc(t.id)}" data-f="c" type="text" inputmode="numeric" autocomplete="off" placeholder="0"></label>
+      <label><span>Venta $</span><input id="v_${esc(t.id)}" data-f="v" type="text" inputmode="decimal" autocomplete="off" placeholder="0"></label>
+      <label><span>Unidades</span><input id="u_${esc(t.id)}" data-f="u" type="text" inputmode="numeric" autocomplete="off" placeholder="0"></label>
+    </div>
+    <div class="tmeta num" data-meta></div>
+  </div>`;
+}
+function buildSheet() {
+  const keep = {};
+  dirty.forEach(tid => { if ($("c_" + tid)) keep[tid] = ["c", "v", "u"].map(f => $(f + "_" + tid).value); });
+  buildSheetInner();
+  Object.entries(keep).forEach(([tid, vals]) => { if ($("c_" + tid)) ["c", "v", "u"].forEach((f, i) => $(f + "_" + tid).value = vals[i]); else dirty.delete(tid); });
+}
+function buildSheetInner() {
+  const box = $("sheet"), ts = scopeTiendas();
+  $("dayTitle").textContent = fmtDayLong(fecha) + (fecha === YDAY ? " · ayer" : "");
+  if (!db) { box.innerHTML = ""; return; }
+  if (!cfg.supervisoras.length || !cfg.tiendas.length) {
+    box.innerHTML = `<div class="card empty">${isAdmin ? "Todavía no hay supervisoras o tiendas. Cargalas en la sección <b>Supervisoras y tiendas</b>, al final de la página." : "Todavía no hay tiendas configuradas. Avisale a la administradora."}</div>`; return;
+  }
+  if (!sup) { box.innerHTML = `<div class="card empty">Elegí tu nombre arriba para ver tus tiendas. El celular lo recuerda para la próxima.</div>`; return; }
+  if (!ts.length) { box.innerHTML = `<div class="card empty">${esc(supName(sup))} todavía no tiene tiendas asignadas.</div>`; return; }
+  if (sup === ALL) {
+    const groups = [...cfg.supervisoras.map(s => s.id), ""];
+    box.innerHTML = groups.map(g => {
+      const list = ts.filter(t => (t.sup || "") === g || (g === "" && !cfg.supervisoras.some(s => s.id === t.sup)));
+      return list.length ? `<h3 class="group-title">${esc(supName(g))}</h3>` + list.map(rowHtml).join("") : "";
+    }).join("");
+  } else box.innerHTML = ts.map(rowHtml).join("");
+}
+function readRow(tid) {
+  const c = $("c_" + tid), v = $("v_" + tid), u = $("u_" + tid);
+  return { rc: c.value.trim(), rv: v.value.trim(), ru: u.value.trim(), c: parseCount(c.value), v: parseMoney(v.value), u: parseCount(u.value) };
+}
+function rowState(tid) {
+  const r = readRow(tid), empty = !r.rc && !r.rv && !r.ru;
+  const errs = [];
+  if (r.rc && isNaN(r.c)) errs.push("comandas: solo números enteros");
+  if (r.rv && isNaN(r.v)) errs.push("venta: escribí solo el número, ej. 1.250.000");
+  if (r.ru && isNaN(r.u)) errs.push("unidades: solo números enteros");
+  const complete = !isNaN(r.c) && !isNaN(r.v) && !isNaN(r.u);
+  if (!empty && !complete && !errs.length) errs.push("faltan datos para completar la tienda");
+  return { r, empty, complete, errs };
+}
+function paintRow(tid) {
+  const row = document.querySelector(`.trow[data-t="${CSS.escape(tid)}"]`); if (!row) return;
+  const st = rowState(tid), saved = dayData.get(tid), isDirty = dirty.has(tid);
+  const pill = row.querySelector("[data-st]"), meta = row.querySelector("[data-meta]");
+  ["c", "v", "u"].forEach(f => { const inp = $(f + "_" + tid), raw = inp.value.trim(); inp.classList.toggle("bad", !!raw && isNaN(f === "v" ? parseMoney(raw) : parseCount(raw))); });
+  let cls = "", pc = "", pt = "Pendiente";
+  if (isDirty && st.errs.length) { cls = "s-err"; pc = "bad"; pt = "Revisar"; }
+  else if (isDirty) { cls = "s-dirty"; pc = "warn"; pt = "Sin guardar"; }
+  else if (saved) { cls = "s-ok"; pc = "ok"; pt = "Cargada"; }
+  row.className = "trow " + cls; pill.className = "pill " + pc; pill.textContent = pt;
+  row.querySelector("[data-tk]").textContent = st.complete && st.r.c > 0 ? "Ticket " + ARS.format(st.r.v / st.r.c) : "";
+  meta.classList.toggle("err", isDirty && st.errs.length > 0);
+  if (isDirty && st.errs.length) meta.textContent = "Revisá " + st.errs.join(" · ");
+  else if (st.complete && st.r.c > 0) {
+    let m = `${DEC.format(st.r.u / st.r.c)} unid. por comanda`;
+    if (st.r.u < st.r.c) m += " · ojo: menos unidades que comandas";
+    meta.textContent = m;
+  } else meta.textContent = "";
+}
+function syncSheet() {
+  const ts = scopeTiendas();
+  ts.forEach(t => {
+    if (!$("c_" + t.id)) return;
+    if (!dirty.has(t.id)) {
+      const d = dayData.get(t.id);
+      $("c_" + t.id).value = d ? d.comandas : "";
+      $("v_" + t.id).value = d ? INT.format(d.venta) : "";
+      $("u_" + t.id).value = d ? d.unidades : "";
+    }
+    paintRow(t.id);
+  });
+  renderDayTotals();
+}
+function renderDayTotals() {
+  const ts = sup ? scopeTiendas() : [];
+  const loaded = ts.filter(t => dayData.has(t.id)).length;
+  $("dayCount").textContent = ts.length ? `${loaded} de ${ts.length} tiendas cargadas` : "";
+  $("dayCount").style.color = !ts.length ? "var(--muted)" : loaded === ts.length ? "var(--ok)" : "var(--warn)";
+  let c = 0, v = 0, u = 0;
+  ts.forEach(t => { if (!$("c_" + t.id)) return; const st = rowState(t.id); if (st.complete) { c += st.r.c; v += st.r.v; u += st.r.u; } });
+  $("dayTot").innerHTML = ts.length ? `<span>Comandas <b>${INT.format(c)}</b></span><span>Venta <b>${ARS.format(v)}</b></span><span>Unidades <b>${INT.format(u)}</b></span>` : "";
+  renderDayRank();
+  $("discardBtn").hidden = !dirty.size;
+  $("saveBtn").textContent = dirty.size ? `Guardar día (${dirty.size})` : "Guardar día";
+}
+$("sheet").addEventListener("input", e => {
+  const row = e.target.closest(".trow"); if (!row) return;
+  dirty.add(row.dataset.t); paintRow(row.dataset.t); renderDayTotals();
+});
+$("discardBtn").addEventListener("click", () => { dirty.clear(); syncSheet(); flash("Cambios descartados"); });
+
+function subscribeDay() {
+  if (!db) return;
+  if (unsubDay) unsubDay();
+  dayData = new Map(); syncSheet();
+  const f = fecha;
+  unsubDay = db.collection("cargas").where("fecha", "==", f).limit(1000).onSnapshot(snap => {
+    if (f !== fecha) return;
+    dayData = new Map(snap.docs.map(d => [d.data().tiendaId, d.data()]));
+    syncSheet();
+  }, () => flash("No se pudieron leer las cargas del día. Recargá la página.", true));
+}
+
+$("saveBtn").addEventListener("click", async () => {
+  if (!db) { flash("Para guardar, abrí la página desde Claude con tu cuenta iniciada.", true); return; }
+  if (canWrite === false) { flash("Tu acceso es solo de lectura. Pedile a la administradora permiso para editar.", true); return; }
+  if (!dirty.size) { flash("No hay cambios para guardar."); return; }
+  const ids = [...dirty], bad = [], toSave = [];
+  ids.forEach(tid => {
+    const st = rowState(tid);
+    if (st.empty) { dirty.delete(tid); return; }
+    if (st.errs.length || !st.complete) bad.push(tid); else toSave.push([tid, st.r]);
+  });
+  if (bad.length) { bad.forEach(paintRow); renderDayTotals(); flash(`Revisá ${bad.length === 1 ? "la tienda marcada" : "las " + bad.length + " tiendas marcadas"} en rojo.`, true); document.querySelector(`.trow[data-t="${CSS.escape(bad[0])}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" }); return; }
+  if (!toSave.length) { syncSheet(); flash("No hay cambios para guardar."); return; }
+  const btn = $("saveBtn"); btn.disabled = true; btn.textContent = "Guardando…";
+  const now = new Date().toISOString(); let ok = 0, fail = 0, perm = false;
+  await Promise.all(toSave.map(async ([tid, r]) => {
+    const t = cfg.tiendas.find(x => x.id === tid) || { id: tid, name: tiendaName(tid), sup: "" };
+    const prev = dayData.get(tid);
+    try {
+      await db.collection("cargas").doc(tid + "_" + fecha).set({
+        tiendaId: tid, tiendaNombre: t.name, supervisoraId: t.sup || "", supervisoraNombre: t.sup ? supName(t.sup) : "",
+        fecha, mes: fecha.slice(0, 7), comandas: r.c, venta: r.v, unidades: r.u,
+        ticketPromedio: r.c > 0 ? Math.round(r.v / r.c * 100) / 100 : null, unidadesPorComanda: r.c > 0 ? Math.round(r.u / r.c * 100) / 100 : null,
+        cargadoPor: (prev && prev.cargadoPor) || myId || "", cargadoEn: (prev && prev.cargadoEn) || now,
+        modificadoPor: prev ? (myId || "") : "", modificadoEn: prev ? now : ""
+      });
+      dirty.delete(tid); ok++;
+    } catch (err) { fail++; if (err && err.code === "invalid_argument") perm = true; }
+  }));
+  btn.disabled = false; syncSheet();
+  if (perm) { canWrite = false; flash("No tenés permiso para guardar. Pedile a la administradora permiso para editar.", true); }
+  else if (fail) flash(`Se guardaron ${ok} tiendas y fallaron ${fail}. Revisá la conexión y tocá Guardar de nuevo.`, true);
+  else flash(`Guardado: ${ok} ${ok === 1 ? "tienda" : "tiendas"} del ${fmtDay(fecha)}`);
+});
+
+/* ---------- Enviar el día ---------- */
+function rankedTiendas(list) {
+  const done = list.filter(t => dayData.has(t.id)).sort((x, y) => mval(aggOne(dayData.get(y.id))) - mval(aggOne(dayData.get(x.id))));
+  return [...done, ...list.filter(t => !dayData.has(t.id))];
+}
+function dayText() {
+  const ts = scopeTiendas(), lines = [];
+  lines.push(`*Carga diaria Mi Gusto*`);
+  lines.push(`Supervisora: ${scopeLabel()}`);
+  lines.push(`Día: ${fmtDayLong(fecha)}`);
+  lines.push("");
+  let c = 0, v = 0, u = 0, n = 0;
+  let pos = 0;
+  const line = t => { const d = dayData.get(t.id); if (!d) return `• ${t.name}: PENDIENTE`; pos++; c += d.comandas; v += d.venta; u += d.unidades; n++; return `${pos}. ${t.name}: ${INT.format(d.comandas)} comandas · ${ARS.format(d.venta)} · ${INT.format(d.unidades)} unid. · ticket ${d.comandas ? ARS.format(d.venta / d.comandas) : "-"}`; };
+  lines.push(`Ranking por ${METRIC_LABEL[metric()]}`);
+  if (sup === ALL) cfg.supervisoras.forEach(s => { const list = ts.filter(t => t.sup === s.id); if (list.length) { pos = 0; lines.push(`_${s.name}_`); rankedTiendas(list).forEach(t => lines.push(line(t))); lines.push(""); } });
+  else rankedTiendas(ts).forEach(t => lines.push(line(t)));
+  if (sup !== ALL) lines.push("");
+  lines.push(`*Total (${n} de ${ts.length} tiendas):* ${INT.format(c)} comandas · ${ARS.format(v)} · ${INT.format(u)} unid.`);
+  return lines.join("\n");
+}
+async function copyText(txt) {
+  try { await navigator.clipboard.writeText(txt); $("copyBox").hidden = true; flash("Copiado. Pegalo en WhatsApp o en un mail."); }
+  catch (e) { const b = $("copyBox"); b.hidden = false; b.value = txt; b.focus(); b.select(); flash("Seleccioná y copiá el texto de abajo"); }
+}
+function readyToSend() {
+  if (!sup || !scopeTiendas().length) { flash("Elegí tu nombre para ver tus tiendas.", true); return false; }
+  if (dirty.size) { flash("Primero guardá los cambios, así el resumen sale con los datos guardados.", true); return false; }
+  return true;
+}
+$("waBtn").addEventListener("click", () => { if (readyToSend()) copyText(dayText()); });
+
+const n2 = v => String(Math.round(v * 100) / 100).replace(".", ",");
+const q = s => `"${String(s).replace(/"/g, '""')}"`;
+const csvDate = s => { const [y, m, d] = s.split("-"); return `${d}/${m}/${y}`; };
+async function saveCsv(filename, lines) {
+  if (!dl) return;
+  try { await dl.save({ filename, data: "﻿" + lines.join("\r\n") }); } catch (e) {}
+}
+$("dayCsvBtn").addEventListener("click", () => {
+  if (!readyToSend()) return;
+  const lines = ["Ranking;Fecha;Supervisora;Tienda;Comandas;Venta;Unidades;Ticket promedio;Unidades por comanda;Estado"];
+  let rk = 0;
+  rankedTiendas(scopeTiendas()).forEach(t => {
+    const d = dayData.get(t.id);
+    lines.push([d ? ++rk : "", csvDate(fecha), q(supName(t.sup)), q(t.name), d ? d.comandas : "", d ? n2(d.venta) : "", d ? d.unidades : "", d && d.comandas ? n2(d.venta / d.comandas) : "", d && d.comandas ? n2(d.unidades / d.comandas) : "", d ? "Cargada" : "Pendiente"].join(";"));
+  });
+  const who = sup === ALL ? "Todas" : supName(sup).replace(/[^\wÁÉÍÓÚáéíóúÑñ\-]+/g, "_");
+  saveCsv(`Carga_${who}_${fecha}.csv`, lines);
+});
+
+/* ---------- Ranking ---------- */
+const METRIC_LABEL = { v: "venta", c: "comandas", u: "unidades", t: "ticket promedio" };
+const metric = () => $("fMetric").value || "v";
+const mval = a => { const m = metric(); return m === "v" ? a.v : m === "c" ? a.c : m === "u" ? a.u : (a.t ?? -1); };
+const colIdx = { c: 0, v: 1, u: 2, t: 3 };
+const mvalSup = a => metric() === "t" ? a.v : mval(a);
+const rkBadge = i => `<span class="rk r${i + 1}">${i + 1}</span>`;
+const barCell = (name, sub, val, max) => `<div class="tcell"><span>${esc(name)}</span>${sub ? `<small>${esc(sub)}</small>` : ""}<div class="bar"><i style="width:${max > 0 ? Math.max(2, Math.round(val / max * 100)) : 0}%"></i></div></div>`;
+const cellsHl3 = a => { const k = colIdx[metric()]; return [INT.format(a.c), ARS.format(a.v), INT.format(a.u)].map((x, i) => `<td${i === k ? ' class="hl"' : ""}>${x}</td>`).join(""); };
+const cellsHl = a => { const k = colIdx[metric()]; const v = [INT.format(a.c), ARS.format(a.v), INT.format(a.u), a.t != null ? ARS.format(a.t) : "–"]; return v.map((x, i) => `<td${i === k ? ' class="hl"' : ""}>${x}</td>`).join(""); };
+function aggOne(d) { return { c: +d.comandas || 0, v: +d.venta || 0, u: +d.unidades || 0, t: d.comandas ? d.venta / d.comandas : null }; }
+function renderDayRank() {
+  const body = $("rankDayBody");
+  const ts = sup ? scopeTiendas() : [];
+  if (!ts.length) { body.innerHTML = `<tr><td colspan="6" class="empty">${sup ? "Sin tiendas asignadas." : "Elegí tu nombre arriba para ver el ranking de tus tiendas."}</td></tr>`; $("rankDayNote").textContent = ""; return; }
+  const done = ts.filter(t => dayData.has(t.id)).map(t => ({ t, a: aggOne(dayData.get(t.id)) })).sort((x, y) => mval(y.a) - mval(x.a));
+  const pend = ts.filter(t => !dayData.has(t.id));
+  const max = done.length ? Math.max(...done.map(x => mval(x.a))) : 0;
+  $("rankDayNote").textContent = `${fmtDayLong(fecha)} · ${done.length} de ${ts.length} tiendas cargadas · ticket promedio calculado por tienda · se actualiza con cada carga`;
+  body.innerHTML = done.map((x, i) => `<tr><td class="rkc">${rkBadge(i)}</td><td>${barCell(x.t.name, sup === ALL ? supName(x.t.sup) : "", mval(x.a), max)}</td>${cellsHl(x.a)}</tr>`).join("")
+    + pend.map(t => `<tr class="pend"><td class="rkc">–</td><td style="text-align:left">${esc(t.name)}${sup === ALL ? ` <small>· ${esc(supName(t.sup))}</small>` : ""}</td><td colspan="4" style="text-align:left">Pendiente de carga</td></tr>`).join("")
+    || `<tr><td colspan="6" class="empty">Sin datos.</td></tr>`;
+}
+$("fMetric").addEventListener("change", () => { renderDayRank(); renderMonth(); });
+
+/* ---------- Registro mensual ---------- */
+function monthKey() { return $("fMes").value || YDAY.slice(0, 7); }
+function subscribeMonth() {
+  if (!db) return;
+  if (unsubMonth) unsubMonth();
+  monthRows = []; renderMonth();
+  const m = monthKey();
+  unsubMonth = db.collection("cargas").where("mes", "==", m).limit(1000).onSnapshot(snap => {
+    if (m !== monthKey()) return;
+    monthRows = snap.docs.map(d => d.data()); renderMonth();
+  }, () => { $("daysBody").innerHTML = `<tr><td colspan="5" class="empty">No se pudo cargar el mes. Recargá la página.</td></tr>`; });
+}
+$("fMes").addEventListener("change", subscribeMonth);
+function agg(rows) {
+  const a = rows.reduce((x, r) => (x.c += +r.comandas || 0, x.v += +r.venta || 0, x.u += +r.unidades || 0, x), { c: 0, v: 0, u: 0 });
+  a.n = rows.length; a.dias = new Set(rows.map(r => r.fecha)).size;
+  a.t = a.c ? a.v / a.c : null; a.upc = a.c ? a.u / a.c : null; return a;
+}
+const cells = a => `<td>${INT.format(a.c)}</td><td>${ARS.format(a.v)}</td><td>${INT.format(a.u)}</td>`;
+const cellsTot = a => cells(a) + `<td class="note" style="text-align:right">por tienda</td>`;
+function daysOfMonth(m) {
+  const [y, mo] = m.split("-").map(Number), last = new Date(y, mo, 0).getDate(), out = [];
+  for (let d = 1; d <= last; d++) { const s = `${m}-${pad(d)}`; if (s <= YDAY) out.push(s); }
+  return out;
+}
+function renderMonth() {
+  const m = monthKey(), mDate = parseYmd(m + "-01");
+  const ts = sup ? scopeTiendas() : [];
+  const ids = new Set(ts.map(t => t.id));
+  if (sup === ALL) monthRows.forEach(r => ids.add(r.tiendaId));
+  const rows = monthRows.filter(r => ids.has(r.tiendaId));
+  const days = daysOfMonth(m), tot = agg(rows), expected = days.length * ts.length;
+  $("kpis").innerHTML = !sup ? "" : [
+    ["Venta", ARS.format(tot.v), `${scopeLabel()} · ${MONTHF.format(mDate)}`],
+    ["Comandas", INT.format(tot.c), `${tot.n} cargas`],
+    ["Unidades", INT.format(tot.u), tot.upc != null ? `${DEC.format(tot.upc)} por comanda` : "–"],
+    ["Cumplimiento de carga", expected ? Math.round(tot.n / expected * 100) + "%" : "–", `${tot.n} de ${expected} cargas esperadas`]
+  ].map(([l, v, s]) => `<div class="kpi"><span>${l}</span><b>${v}</b><small>${esc(s)}</small></div>`).join("");
+
+  if (!sup) {
+    $("storeBody").innerHTML = `<tr><td colspan="8" class="empty">Elegí tu nombre arriba para ver el registro de tus tiendas.</td></tr>`; $("supRankWrap").hidden = true;
+    $("storeFoot").innerHTML = ""; $("daysBody").innerHTML = ""; return;
+  }
+  const dayCls = (n, of) => !of ? "" : n >= of ? "c-ok" : n === 0 ? "c-bad" : "c-warn";
+  const supOf = id => { const t = cfg.tiendas.find(x => x.id === id); return t ? t.sup : ((monthRows.find(r => r.tiendaId === id) || {}).supervisoraId || ""); };
+  const ranked = [...ids].map(id => ({ id, a: agg(rows.filter(r => r.tiendaId === id)) }))
+    .sort((x, y) => (y.a.n > 0) - (x.a.n > 0) || mval(y.a) - mval(x.a) || tiendaName(x.id).localeCompare(tiendaName(y.id)));
+  const maxS = ranked.length ? Math.max(0, ...ranked.map(x => mval(x.a))) : 0;
+  const body = ranked.map((x, i) => x.a.n
+    ? `<tr><td class="rkc">${rkBadge(i)}</td><td>${barCell(tiendaName(x.id), sup === ALL ? supName(supOf(x.id)) : "", mval(x.a), maxS)}</td><td class="${dayCls(x.a.dias, days.length)}">${x.a.dias} de ${days.length}</td>${cellsHl(x.a)}<td>${x.a.upc != null ? DEC.format(x.a.upc) : "–"}</td></tr>`
+    : `<tr class="pend"><td class="rkc">–</td><td style="text-align:left">${esc(tiendaName(x.id))}${sup === ALL ? ` <small>· ${esc(supName(supOf(x.id)))}</small>` : ""}</td><td class="c-bad">0 de ${days.length}</td><td colspan="5" style="text-align:left">Sin cargas este mes</td></tr>`).join("");
+  $("storeBody").innerHTML = body || `<tr><td colspan="8" class="empty">Sin tiendas asignadas.</td></tr>`;
+  $("storeFoot").innerHTML = body ? `<tr><td></td><td style="text-align:left">Total</td><td>${tot.n} cargas</td>${cellsTot(tot)}<td></td></tr>` : "";
+
+  $("supRankWrap").hidden = sup !== ALL;
+  if (sup === ALL) {
+    const sr = cfg.supervisoras.map(s => {
+      const st = [...ids].filter(id => supOf(id) === s.id);
+      return { s, n: st.length, a: agg(rows.filter(r => st.includes(r.tiendaId))) };
+    }).sort((x, y) => mvalSup(y.a) - mvalSup(x.a));
+    const maxP = sr.length ? Math.max(0, ...sr.map(x => mvalSup(x.a))) : 0;
+    $("supRankBody").innerHTML = sr.map((x, i) => `<tr><td class="rkc">${rkBadge(i)}</td><td>${barCell(x.s.name, `${x.n} tiendas`, mvalSup(x.a), maxP)}</td><td>${x.a.n} de ${days.length * x.n}</td>${cellsHl3(x.a)}</tr>`).join("");
+  }
+
+  $("daysBody").innerHTML = days.length ? days.slice().reverse().map(d => {
+    const dr = rows.filter(r => r.fecha === d), a = agg(dr), n = dr.length;
+    return `<tr><td>${fmtDay(d)}</td><td class="${dayCls(n, ts.length)}">${n} de ${ts.length}</td>${cells(a)}</tr>`;
+  }).join("") : `<tr><td colspan="5" class="empty">Este mes todavía no tiene días cerrados.</td></tr>`;
+}
+$("monthCsvBtn").addEventListener("click", () => {
+  if (!sup) { flash("Elegí tu nombre para descargar tu registro.", true); return; }
+  const ids = new Set(scopeTiendas().map(t => t.id));
+  if (sup === ALL) monthRows.forEach(r => ids.add(r.tiendaId));
+  const rows = monthRows.filter(r => ids.has(r.tiendaId)).sort((a, b) => a.fecha.localeCompare(b.fecha) || tiendaName(a.tiendaId).localeCompare(tiendaName(b.tiendaId)));
+  const lines = ["Fecha;Supervisora;Tienda;Comandas;Venta;Unidades;Ticket promedio;Unidades por comanda"];
+  rows.forEach(r => { const t = cfg.tiendas.find(x => x.id === r.tiendaId); lines.push([csvDate(r.fecha), q(t ? supName(t.sup) : (r.supervisoraNombre || "")), q(tiendaName(r.tiendaId)), r.comandas, n2(r.venta), r.unidades, r.comandas ? n2(r.venta / r.comandas) : "", r.comandas ? n2(r.unidades / r.comandas) : ""].join(";")); });
+  const who = sup === ALL ? "Todas" : supName(sup).replace(/[^\wÁÉÍÓÚáéíóúÑñ\-]+/g, "_");
+  saveCsv(`Registro_${who}_${monthKey()}.csv`, lines);
+});
+
+/* ---------- Configuración (administradora) ---------- */
+let cfgWriting = Promise.resolve();
+function writeCfg(next) {
+  cfgWriting = cfgWriting.then(() => db.doc("config/estructura").set(next)).catch(() => flash("No se pudo guardar el cambio. Probá de nuevo.", true));
+  return cfgWriting;
+}
+function renderAdmin() {
+  $("adminSec").hidden = !isAdmin || !db;
+  if (!isAdmin) return;
+  const supOpts = sel => `<option value="">Sin supervisora</option>` + cfg.supervisoras.map(s => `<option value="${esc(s.id)}"${s.id === sel ? " selected" : ""}>${esc(s.name)}</option>`).join("");
+  $("supList").innerHTML = cfg.supervisoras.length ? cfg.supervisoras.map(s => {
+    const n = cfg.tiendas.filter(t => t.sup === s.id).length;
+    return `<div class="cfg-row"><input type="text" value="${esc(s.name)}" data-rensup="${esc(s.id)}" aria-label="Nombre de ${esc(s.name)}"><span class="note" style="margin:0">${n} ${n === 1 ? "tienda" : "tiendas"}</span>
+      <button type="button" class="btn ghost sm" data-rm="sup:${esc(s.id)}">Quitar</button><button type="button" class="btn danger sm" data-rmyes="sup:${esc(s.id)}" hidden>Sí, quitar</button></div>`;
+  }).join("") : `<p class="note" style="margin:0">Todavía no hay supervisoras.</p>`;
+  $("tiendaList").innerHTML = cfg.tiendas.length ? cfg.tiendas.map(t => `<div class="cfg-row">
+      <input type="text" value="${esc(t.name)}" data-rentienda="${esc(t.id)}" aria-label="Nombre de ${esc(t.name)}">
+      <select data-assign="${esc(t.id)}" aria-label="Supervisora de ${esc(t.name)}">${supOpts(t.sup)}</select>
+      <button type="button" class="btn ghost sm" data-rm="tienda:${esc(t.id)}">Quitar</button><button type="button" class="btn danger sm" data-rmyes="tienda:${esc(t.id)}" hidden>Sí, quitar</button></div>`).join("")
+    : `<p class="note" style="margin:0">Todavía no hay tiendas.</p>`;
+  const ns = $("newTiendaSup"), keep = ns.value; ns.innerHTML = supOpts(keep);
+}
+$("addSup").addEventListener("click", () => {
+  const name = $("newSup").value.trim(); if (!name) { $("newSup").focus(); return; }
+  if (cfg.supervisoras.some(s => s.name.toLowerCase() === name.toLowerCase())) { flash("Esa supervisora ya está en la lista.", true); return; }
+  $("newSup").value = ""; writeCfg({ ...cfg, supervisoras: [...cfg.supervisoras, { id: newId("p"), name }] });
+});
+$("addTienda").addEventListener("click", () => {
+  const name = $("newTienda").value.trim(); if (!name) { $("newTienda").focus(); return; }
+  if (cfg.tiendas.some(t => t.name.toLowerCase() === name.toLowerCase())) { flash("Esa tienda ya está en la lista.", true); return; }
+  $("newTienda").value = ""; writeCfg({ ...cfg, tiendas: [...cfg.tiendas, { id: newId("t"), name, sup: $("newTiendaSup").value }] });
+  $("newTienda").focus();
+});
+$("newSup").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("addSup").click(); } });
+$("newTienda").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("addTienda").click(); } });
+$("adminSec").addEventListener("change", e => {
+  const d = e.target.dataset;
+  if (d.rensup) { const name = e.target.value.trim(); if (!name) { renderAdmin(); return; } writeCfg({ ...cfg, supervisoras: cfg.supervisoras.map(s => s.id === d.rensup ? { ...s, name } : s) }); }
+  if (d.rentienda) { const name = e.target.value.trim(); if (!name) { renderAdmin(); return; } writeCfg({ ...cfg, tiendas: cfg.tiendas.map(t => t.id === d.rentienda ? { ...t, name } : t) }); }
+  if (d.assign) writeCfg({ ...cfg, tiendas: cfg.tiendas.map(t => t.id === d.assign ? { ...t, sup: e.target.value } : t) });
+});
+$("adminSec").addEventListener("click", e => {
+  const rm = e.target.closest("[data-rm]");
+  if (rm) { rm.hidden = true; rm.nextElementSibling.hidden = false; return; }
+  const yes = e.target.closest("[data-rmyes]"); if (!yes) return;
+  const [kind, id] = yes.dataset.rmyes.split(":");
+  if (kind === "sup") writeCfg({ supervisoras: cfg.supervisoras.filter(s => s.id !== id), tiendas: cfg.tiendas.map(t => t.sup === id ? { ...t, sup: "" } : t) });
+  else writeCfg({ ...cfg, tiendas: cfg.tiendas.filter(t => t.id !== id) });
+});
+
+
+/* ---------- Importar Excel (comandas, ventas y unidades por separado) ---------- */
+const nrm = s => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[().]/g, " ").replace(/\s+/g, " ").trim();
+const IGNORE_COL = /^(producto|id|codigo|total|eventos|sucursal mas cercana)$|cerrad/;
+const ALIAS = { "pilar cruce derqui": "pilar derqui", "pilar palmas": "pilar derqui", "barrancas": "barrancas de belgrano", "barranca belgrano": "barrancas de belgrano", "caballitos": "caballito", "pacheco": "general pacheco", "madero": "puerto madero" };
+function matchTienda(raw) {
+  let n = nrm(raw).replace(/^mi gusto\s*-?\s*/, "").replace(/\s+viejo$/, "").trim();
+  if (!n || IGNORE_COL.test(n)) return null;
+  n = ALIAS[n] || n;
+  const ts = cfg.tiendas, exact = ts.find(t => nrm(t.name) === n); if (exact) return exact;
+  const tok = x => x.split(" ").filter(w => w && !["de", "la", "los", "las", "el"].includes(w));
+  const b = tok(n), cand = ts.filter(t => { const a = tok(nrm(t.name)); return a.length && b.length && (a.every(x => b.includes(x)) || b.every(x => a.includes(x))); });
+  return cand.length === 1 ? cand[0] : null;
+}
+const toN = v => { if (typeof v === "number") return v; let s = String(v ?? "").replace(/[\s$]/g, ""); if (!s) return NaN; if (s.includes(",")) s = s.replace(/\./g, "").replace(",", "."); else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, ""); return Number(s); };
+const KIND = { c: /comanda|ticket|pedido|orden|transacc|operacion/, v: /venta|importe|monto|factur|neto|\$/, u: /unidad|cantidad|uds|producto/ };
+function guessKind(name, aoa) {
+  const n = nrm(name), txt = nrm(aoa.slice(0, 6).flat().join(" "));
+  if (/producto|unidad/.test(n) || /reporte por productos/.test(txt)) return "u";
+  if (/comanda|ticket/.test(n)) return "c";
+  if (/venta|factur/.test(n)) return "v";
+  return "";
+}
+/* Lee un archivo y devuelve { kind: valores por tienda } */
+function parseImport(wb, fileName) {
+  const out = { c: new Map(), v: new Map(), u: new Map() }, info = { skipped: new Set(), kinds: new Set(), fecha: "" };
+  wb.SheetNames.forEach(sn => {
+    const aoa = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, defval: "", raw: true });
+    const txt = aoa.slice(0, 8).flat().join(" "), dm = txt.match(/\b(\d{1,2})\/(\d{1,2})\/(20\d\d)\b/); if (dm && !info.fecha) info.fecha = `${dm[3]}-${pad(dm[2])}-${pad(dm[1])}`;
+    const fk = guessKind(fileName + " " + sn, aoa);
+    /* A) Sucursales en columnas (reporte por productos): tomo la fila TOTAL de cada categoría, o sumo los productos */
+    let hr = -1, cols = [];
+    for (let r = 0; r < Math.min(aoa.length, 30) && hr < 0; r++) { const m = aoa[r].map((c, j) => [j, matchTienda(c)]).filter(x => x[1]); if (m.length >= 3) { hr = r; cols = m; } }
+    if (hr >= 0) {
+      const k = fk || "u"; info.kinds.add(k);
+      aoa[hr].forEach(c => { const t = String(c).trim(); if (t && !matchTienda(t) && !IGNORE_COL.test(nrm(t)) && !/viejo/i.test(t)) info.skipped.add(t); });
+      const body = aoa.slice(hr + 1), isHead = r => r.filter(c => matchTienda(c)).length >= 3;
+      const totRows = body.filter(r => /^total\b/i.test(String(r[0]).trim()) && !/^total (final|general)$/i.test(String(r[0]).trim()));
+      const useRows = totRows.length ? totRows : body.filter(r => !isHead(r) && !/^total/i.test(String(r[0]).trim()));
+      cols.forEach(([j, t]) => { let s = 0, any = false; useRows.forEach(r => { const v = toN(r[j]); if (!isNaN(v) && String(r[j]).trim() !== "") { s += v; any = true; } }); if (any) out[k].set(t.id, (out[k].get(t.id) || 0) + s); });
+      return;
+    }
+    /* B) Sucursales en filas: columna Sucursal + columnas de comandas / venta / unidades */
+    let hi = -1, sc = -1;
+    for (let r = 0; r < Math.min(aoa.length, 30) && hi < 0; r++) { const j = aoa[r].findIndex(c => /^(sucursal|sucursales|local|locales|tienda|tiendas|punto de venta)$/.test(nrm(c))); if (j >= 0) { hi = r; sc = j; } }
+    if (hi < 0) { for (let r = 0; r < Math.min(aoa.length, 40) && hi < 0; r++) for (let c = 0; c < 4; c++) if (matchTienda(aoa[r][c])) { hi = r - 1; sc = c; break; } }
+    if (sc < 0) return;
+    const H = (aoa[hi] || []).map(nrm), col = {};
+    ["c", "v", "u"].forEach(k => { const i = H.findIndex((h, j) => j !== sc && h && KIND[k].test(h) && !Object.values(col).includes(j)); if (i >= 0) col[k] = i; });
+    if (!Object.keys(col).length && fk) { const i = H.findIndex((h, j) => j > sc && aoa.slice(hi + 1).some(r => !isNaN(toN(r[j])) && String(r[j]).trim() !== "")); if (i >= 0) col[fk] = i; }
+    Object.keys(col).forEach(k => info.kinds.add(k));
+    aoa.slice(hi + 1).forEach(r => { const raw = String(r[sc] ?? "").trim(); if (!raw || /^total/i.test(raw)) return; const t = matchTienda(raw); if (!t) { if (!IGNORE_COL.test(nrm(raw))) info.skipped.add(raw); return; }
+      Object.entries(col).forEach(([k, j]) => { const v = toN(r[j]); if (!isNaN(v) && String(r[j]).trim() !== "") out[k].set(t.id, (out[k].get(t.id) || 0) + v); }); });
+  });
+  return { out, info };
+}
+const KLBL = { c: "Comandas", v: "Venta", u: "Unidades" };
+$("impBtn").addEventListener("click", () => {
+  if (!db) { flash("Abrí la página desde Claude con tu cuenta para importar.", true); return; }
+  if (!sup) { flash("Elegí tu nombre (o «Todas») antes de importar.", true); return; }
+  $("impFile").click();
+});
+$("impFile").addEventListener("change", async e => {
+  const files = [...(e.target.files || [])]; e.target.value = ""; if (!files.length) return;
+  if (typeof XLSX === "undefined") { flash("No se pudo cargar el lector de Excel. Revisá la conexión y recargá la página.", true); return; }
+  const scope = new Set(scopeTiendas().map(t => t.id)), lines = [], outside = new Set(), fechas = new Set();
+  for (const f of files) {
+    try {
+      const buf = new Uint8Array(await f.arrayBuffer());
+      let wb; try { wb = XLSX.read(buf, { type: "array" }); } catch (er) { wb = XLSX.read(new TextDecoder("utf-8").decode(buf), { type: "string" }); }
+      const { out, info } = parseImport(wb, f.name);
+      if (info.fecha) fechas.add(info.fecha);
+      const parts = [];
+      ["c", "v", "u"].forEach(k => { if (!out[k].size) return; let n = 0, tot = 0;
+        out[k].forEach((val, tid) => { if (!scope.has(tid)) { outside.add(tiendaName(tid)); return; } const inp = $(k + "_" + tid); if (!inp) return;
+          inp.value = k === "v" ? val.toLocaleString("es-AR", { maximumFractionDigits: 2 }) : String(Math.round(val)); dirty.add(tid); n++; tot += val; });
+        parts.push(`<b>${KLBL[k]}</b>: ${n} tiendas · total ${k === "v" ? ARS.format(tot) : INT.format(Math.round(tot))}`); });
+      lines.push(`<div>«${esc(f.name)}» → ${parts.join(" · ") || `<span class="w">no encontré datos de tiendas</span>`}${info.skipped.size ? `<br><span class="w">No reconocí: ${[...info.skipped].map(esc).join(", ")}</span>` : ""}</div>`);
+    } catch (er) { lines.push(`<div class="w">«${esc(f.name)}»: no lo pude leer.</div>`); }
+  }
+  scopeTiendas().forEach(t => { if ($("c_" + t.id)) paintRow(t.id); });
+  renderDayTotals();
+  const miss = scopeTiendas().filter(t => $("c_" + t.id) && dirty.has(t.id) && !rowState(t.id).complete).length;
+  if (outside.size) lines.push(`<div class="w">Hay datos de ${outside.size} tiendas que no son de ${esc(scopeLabel())}. Para cargarlas todas, elegí «Todas (vista general)» y volvé a importar.</div>`);
+  if ([...fechas].some(x => x !== fecha)) lines.push(`<div class="w">El archivo parece ser del ${[...fechas].map(x => x.split("-").reverse().join("/")).join(", ")} y estás cargando el ${fecha.split("-").reverse().join("/")}. Revisá el día antes de guardar.</div>`);
+  lines.push(miss ? `<div class="w">${miss} ${miss === 1 ? "tienda queda" : "tiendas quedan"} incompleta${miss === 1 ? "" : "s"}: falta subir el archivo de ${["c", "v", "u"].filter(k => scopeTiendas().some(t => $(k + "_" + t.id) && dirty.has(t.id) && !$(k + "_" + t.id).value.trim())).map(k => KLBL[k].toLowerCase()).join(" y ") || "algún dato"}.</div>` : `<div class="ok"><b>Listo para guardar.</b> Revisá los números y tocá «Guardar día».</div>`);
+  const box = $("impRes"); box.hidden = false; box.innerHTML = lines.join("");
+});
+
+/* ---------- Inicio ---------- */
+async function init() {
+  $("fFecha").value = YDAY; $("fFecha").max = YDAY; $("fMes").value = YDAY.slice(0, 7);
+  $("dayTitle").textContent = fmtDayLong(YDAY) + " · ayer";
+  renderMonth();
+  if (!window.claude || typeof window.claude.use !== "function") {
+    banner("Abrí la página desde Claude", "Para cargar y ver los datos necesitás abrir este link con tu cuenta de Claude iniciada.");
+    $("sheet").innerHTML = ""; return;
+  }
+  const [dbNs, u, d] = await Promise.all([claude.use("db"), claude.use("user"), claude.use("downloads")]);
+  db = dbNs; dl = d;
+  if (dl) { $("dayCsvBtn").hidden = false; $("monthCsvBtn").hidden = false; }
+  if (u) {
+    try { myId = await u.id(); } catch (e) {}
+    try { isAdmin = !!(await u.canEdit()); } catch (e) {}
+    try { canWrite = await u.can("data.write"); } catch (e) { canWrite = null; }
+  }
+  if (!db) { banner("Iniciá sesión en Claude", "Para cargar y ver los datos necesitás abrir la página con tu cuenta de Claude."); $("saveBtn").disabled = true; return; }
+  if (canWrite === false) { banner("Estás con acceso de solo lectura", "Podés ver y descargar los datos, pero no guardar. Revisá que estés con la cuenta correcta o pedile a la administradora permiso para editar."); $("saveBtn").disabled = true; }
+  db.doc("config/estructura").onSnapshot(snap => {
+    const data = snap.exists ? snap.data() : {};
+    cfg = { supervisoras: Array.isArray(data.supervisoras) ? data.supervisoras : [], tiendas: Array.isArray(data.tiendas) ? data.tiendas : [] };
+    fillSupSelect(); buildSheet(); syncSheet(); renderMonth(); renderAdmin();
+  }, () => flash("No se pudo leer la lista de tiendas. Recargá la página.", true));
+  subscribeDay(); subscribeMonth();
+}
+init();
+</script>
+
+</body></html>
