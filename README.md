@@ -87,6 +87,91 @@
 
 ---
 
+## ⚙️ Instalación y Puesta en Marcha
+
+Sigue estos pasos para clonar, configurar y ejecutar el proyecto en tu entorno local.
+
+### 📋 Requisitos Previos
+
+- **Node.js**: Versión 18.0 o superior ([Descargar Node.js](https://nodejs.org/)).
+- **Gestor de paquetes**: `npm` (incluido con Node.js) o `pnpm`.
+
+---
+
+### 1️⃣ Clonar el Repositorio
+
+```bash
+git clone https://github.com/tu-usuario/MG-Supervisoria.git
+cd MG-Supervisoria
+```
+
+---
+
+### 2️⃣ Instalar Dependencias
+
+Ejecuta el gestor de paquetes de tu preferencia:
+
+```bash
+# Con npm
+npm install
+
+# O con pnpm
+pnpm install
+```
+
+---
+
+### 3️⃣ Configurar Variables de Entorno
+
+Copia el archivo de ejemplo `.env.example` y crea tu propio `.env`:
+
+```bash
+# En Windows (PowerShell)
+Copy-Item .env.example .env
+
+# En Linux / macOS / Bash
+cp .env.example .env
+```
+
+Abre el archivo `.env` y completa con las credenciales de tu proyecto en Supabase:
+
+```env
+VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
+VITE_SUPABASE_ANON_KEY=tu-clave-anon-aqui
+```
+
+> [!NOTE]
+> La aplicación también permite configurar o ajustar las credenciales de Supabase directamente desde la interfaz mediante el modal de base de datos en caso de ser necesario.
+
+---
+
+### 4️⃣ Iniciar el Servidor de Desarrollo
+
+Inicia la aplicación en modo desarrollo con recarga en caliente (HMR):
+
+```bash
+# Con npm
+npm run dev
+
+# O con pnpm
+pnpm dev
+```
+
+La consola mostrará la URL local (por defecto `http://localhost:5173`) para abrirla en el navegador.
+
+---
+
+### 📦 Scripts Disponibles
+
+| Comando | Descripción |
+| :--- | :--- |
+| `npm run dev` | Inicia el servidor de desarrollo local con Vite. |
+| `npm run build` | Compila el proyecto optimizado para producción en `/dist`. |
+| `npm run preview` | Previsualiza localmente el build de producción. |
+| `npm run lint` | Ejecuta el análisis estático de código mediante `oxlint`. |
+
+---
+
 <div align="center">
   <sub>Desarrollado con dedicación para el equipo operativo de Mi Gusto. Todos los derechos reservados.</sub>
 </div>
