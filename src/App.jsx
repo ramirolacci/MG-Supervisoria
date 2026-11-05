@@ -17,6 +17,7 @@ import { CustomMonthPicker } from './components/CustomMonthPicker';
 import { CustomSupervisorSelect } from './components/CustomSupervisorSelect';
 import { Footer } from './components/Footer';
 import { UserAvatar } from './components/UserAvatar';
+import { ExcelImportModal } from './components/ExcelImportModal';
 import { api } from './lib/api';
 import { getSupabaseCredentials } from './lib/supabase';
 import { getStoredSession, clearSession, isUserAdmin, canUserAccessHistory } from './lib/auth';
@@ -37,7 +38,7 @@ import {
   ymd,
   formatThousands,
 } from './lib/formatters';
-import { Calendar, UserCheck, AlertTriangle, CheckCircle, Copy, FileText, Save, RotateCcw } from 'lucide-react';
+import { Calendar, UserCheck, AlertTriangle, CheckCircle, Copy, FileText, Save, RotateCcw, FileSpreadsheet } from 'lucide-react';
 import { animateTabEnter, animateTabExit, animateToastEnter, gsap } from './lib/animations';
 
 const LS_SELECTED_SUP = 'mg_active_supervisora';
@@ -130,6 +131,7 @@ export default function App() {
   const [dayRankMetric, setDayRankMetric] = useState('v');
   const [isSaving, setIsSaving] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
+  const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
 
   const showToast = (text, type = 'success') => {
     setToastMessage({ text, type });
@@ -541,6 +543,36 @@ export default function App() {
     setDirtyStoreIds(new Set());
     loadDayData(selectedFecha);
     showToast('Cambios descartados', 'info');
+  };
+
+  // Aplicar datos autocompletados desde Excel
+  const handleApplyExcelImport = (itemsToApply) => {
+    if (!itemsToApply || itemsToApply.length === 0) return;
+
+    setFormInputs((prev) => {
+      const next = { ...prev };
+      itemsToApply.forEach((item) => {
+        next[item.store.id] = {
+          rc: item.rc,
+          rv: item.rv,
+          ru: item.ru,
+        };
+      });
+      return next;
+    });
+
+    setDirtyStoreIds((prev) => {
+      const next = new Set(prev);
+      itemsToApply.forEach((item) => {
+        next.add(item.store.id);
+      });
+      return next;
+    });
+
+    showToast(
+      `¡Se completaron ${itemsToApply.length} sucursales desde el Excel! Verificá y hacé clic en Guardar.`,
+      'success'
+    );
   };
 
   // WhatsApp formatted text generator
@@ -1085,20 +1117,6 @@ export default function App() {
                     )}
                   </button>
                 )}
-
-                {/* Botón Acceso Rápido a URL de Planificación */}
-                <button
-                  type="button"
-                  onClick={() => navigateTo('planificacion')}
-                  className="flex items-center justify-center gap-1.5 px-2.5 sm:px-5 py-2.5 rounded-xl font-extrabold text-[11px] sm:text-sm gsap-button text-center transition-all duration-200 cursor-pointer text-indigo-300/90 hover:text-white hover:bg-indigo-950/50 border border-indigo-900/40"
-                  title="Abrir Planificación en /planificacion"
-                >
-                  <span className="text-sm sm:text-base">📅</span>
-                  <span className="truncate">Planificación</span>
-                  <span className="hidden xl:inline text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-950 border border-indigo-800/80 text-indigo-300">
-                    URL
-                  </span>
-                </button>
               </div>
             </div>
 
@@ -1148,13 +1166,29 @@ export default function App() {
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div
+                className={`w-full sm:w-auto flex gap-2 sm:gap-3 ${
+                  rankingView === 'rango'
+                    ? 'flex-col sm:flex-row items-stretch sm:items-center'
+                    : 'flex-row items-center justify-between sm:justify-start'
+                }`}
+              >
                 {/* Switch Día / Mes / Rango */}
-                <div className="flex p-1.5 bg-slate-950 rounded-2xl border border-slate-800 shadow-inner">
+                <div
+                  className={`p-1 sm:p-1.5 bg-slate-950 rounded-2xl border border-slate-800 shadow-inner ${
+                    rankingView === 'rango'
+                      ? 'w-full sm:w-auto grid grid-cols-3 sm:flex'
+                      : 'flex w-fit'
+                  }`}
+                >
                   <button
                     type="button"
-                    onClick={() => setRankingView('dia')}
-                    className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition active:scale-95 ${
+                    onClick={() => handleRankingViewChange('dia')}
+                    className={`py-2 rounded-xl text-xs sm:text-sm font-black transition active:scale-95 cursor-pointer text-center ${
+                      rankingView === 'rango'
+                        ? 'w-full sm:w-auto px-2 sm:px-4'
+                        : 'px-3.5 sm:px-4'
+                    } ${
                       rankingView === 'dia'
                         ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/25 scale-[1.02]'
                         : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
@@ -1164,8 +1198,12 @@ export default function App() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setRankingView('mes')}
-                    className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition active:scale-95 ${
+                    onClick={() => handleRankingViewChange('mes')}
+                    className={`py-2 rounded-xl text-xs sm:text-sm font-black transition active:scale-95 cursor-pointer text-center ${
+                      rankingView === 'rango'
+                        ? 'w-full sm:w-auto px-2 sm:px-4'
+                        : 'px-3.5 sm:px-4'
+                    } ${
                       rankingView === 'mes'
                         ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/25 scale-[1.02]'
                         : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
@@ -1175,8 +1213,12 @@ export default function App() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setRankingView('rango')}
-                    className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition active:scale-95 ${
+                    onClick={() => handleRankingViewChange('rango')}
+                    className={`py-2 rounded-xl text-xs sm:text-sm font-black transition active:scale-95 cursor-pointer text-center ${
+                      rankingView === 'rango'
+                        ? 'w-full sm:w-auto px-2 sm:px-4'
+                        : 'px-3.5 sm:px-4'
+                    } ${
                       rankingView === 'rango'
                         ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/25 scale-[1.02]'
                         : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
@@ -1186,105 +1228,109 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Show Month Picker only when viewing Mes */}
-                {rankingView === 'mes' && (
-                  <CustomMonthPicker
-                    value={selectedMonth}
-                    onChange={setSelectedMonth}
-                  />
-                )}
-
-                {/* Botón Exportar PDF de Ranking / Métricas / Rango */}
-                <button
-                  type="button"
-                  onClick={handleExportRankingPdf}
-                  className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-lg shadow-rose-600/25 active:scale-95"
-                  title="Descargar informe ejecutivo en PDF de ranking o métricas"
+                {/* Contenedor de Botones de Exportar */}
+                <div
+                  className={`flex items-center gap-2 ${
+                    rankingView === 'rango' ? 'w-full sm:w-auto' : 'w-auto'
+                  }`}
                 >
-                  <FileText className="w-4 h-4" />
-                  <span>Exportar PDF</span>
-                </button>
-
-                {/* Botón Exportar Excel cuando esté en Rango */}
-                {rankingView === 'rango' && (
+                  {/* Botón Exportar PDF de Ranking / Métricas / Rango */}
                   <button
                     type="button"
-                    onClick={handleExportRangeCsv}
-                    className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-lg shadow-emerald-600/25 active:scale-95"
-                    title="Descargar CSV del rango de fechas seleccionado"
+                    onClick={handleExportRankingPdf}
+                    className={`flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-lg shadow-rose-600/25 active:scale-95 cursor-pointer whitespace-nowrap ${
+                      rankingView === 'rango' ? 'flex-1 sm:flex-initial' : 'flex-initial'
+                    }`}
+                    title="Descargar informe ejecutivo en PDF de ranking o métricas"
                   >
-                    <FileText className="w-4 h-4" />
-                    <span>Exportar CSV</span>
+                    <FileText className="w-4 h-4 shrink-0" />
+                    <span>Exportar PDF</span>
                   </button>
-                )}
+
+                  {/* Botón Exportar CSV cuando esté en Rango */}
+                  {rankingView === 'rango' && (
+                    <button
+                      type="button"
+                      onClick={handleExportRangeCsv}
+                      className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-lg shadow-emerald-600/25 active:scale-95 cursor-pointer whitespace-nowrap"
+                      title="Descargar CSV del rango de fechas seleccionado"
+                    >
+                      <FileText className="w-4 h-4 shrink-0" />
+                      <span>Exportar CSV</span>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Content: Day Ranking OR Monthly Dashboard OR Range Report Dashboard */}
-            {activeStores.length > 0 ? (
-              rankingView === 'dia' ? (
-                <DayRankTable
-                  rankedList={rankedDayList}
-                  metric={dayRankMetric}
-                  onMetricChange={setDayRankMetric}
-                  dateTitle={fmtDayLong(selectedFecha)}
-                />
-              ) : rankingView === 'mes' ? (
-                <MonthlyDashboard
-                  month={selectedMonth}
-                  onMonthChange={setSelectedMonth}
-                  kpis={monthlyData.kpis}
-                  storesMonthly={monthlyData.storesMonthly}
-                  supervisorasMonthly={monthlyData.supervisorasMonthly}
-                  daysMonthly={monthlyData.daysMonthly}
-                  isAllSupervisors={selectedSup === ALL_SUP}
-                  onExportMonthPdf={handleExportRankingPdf}
-                  onExportMonthCsv={handleExportMonthCsv}
-                />
+            {/* Content: Day Ranking OR Monthly Dashboard OR Range Report Dashboard with smooth transitions */}
+            <div ref={rankingContentRef}>
+              {activeStores.length > 0 ? (
+                rankingView === 'dia' ? (
+                  <DayRankTable
+                    rankedList={rankedDayList}
+                    metric={dayRankMetric}
+                    onMetricChange={setDayRankMetric}
+                    dateTitle={fmtDayLong(selectedFecha)}
+                  />
+                ) : rankingView === 'mes' ? (
+                  <MonthlyDashboard
+                    month={selectedMonth}
+                    onMonthChange={setSelectedMonth}
+                    kpis={monthlyData.kpis}
+                    storesMonthly={monthlyData.storesMonthly}
+                    supervisorasMonthly={monthlyData.supervisorasMonthly}
+                    daysMonthly={monthlyData.daysMonthly}
+                    isAllSupervisors={selectedSup === ALL_SUP}
+                    onExportMonthPdf={handleExportRankingPdf}
+                    onExportMonthCsv={handleExportMonthCsv}
+                  />
+                ) : (
+                  <RangeReportDashboard
+                    startDate={rangeStartDate}
+                    endDate={rangeEndDate}
+                    onStartDateChange={setRangeStartDate}
+                    onEndDateChange={setRangeEndDate}
+                    selectedSup={selectedSup}
+                    onSelectSup={(supId) => {
+                      setSelectedSup(supId);
+                      localStorage.setItem(LS_SELECTED_SUP, supId);
+                    }}
+                    supervisoras={config.supervisoras}
+                    tiendas={config.tiendas}
+                    kpis={rangeData.kpis}
+                    storesData={rangeData.storesData}
+                    supervisorasData={rangeData.supervisorasData}
+                    daysData={rangeData.daysData}
+                    isAllSupervisors={selectedSup === ALL_SUP}
+                    currentUser={currentUser}
+                    isAdmin={isUserAdmin(currentUser)}
+                  />
+                )
               ) : (
-                <RangeReportDashboard
-                  startDate={rangeStartDate}
-                  endDate={rangeEndDate}
-                  onStartDateChange={setRangeStartDate}
-                  onEndDateChange={setRangeEndDate}
-                  selectedSup={selectedSup}
-                  onSelectSup={(supId) => {
-                    setSelectedSup(supId);
-                    localStorage.setItem(LS_SELECTED_SUP, supId);
-                  }}
-                  supervisoras={config.supervisoras}
-                  kpis={rangeData.kpis}
-                  storesData={rangeData.storesData}
-                  supervisorasData={rangeData.supervisorasData}
-                  daysData={rangeData.daysData}
-                  isAllSupervisors={selectedSup === ALL_SUP}
-                  currentUser={currentUser}
-                  isAdmin={isUserAdmin(currentUser)}
-                />
-              )
-            ) : (
-              <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-8 text-center text-slate-400">
-                <p className="text-base font-semibold text-white mb-1">
-                  Sin tiendas para mostrar métricas
-                </p>
-              </div>
-            )}
+                <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-8 text-center text-slate-400">
+                  <p className="text-base font-semibold text-white mb-1">
+                    Sin tiendas para mostrar métricas
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           /* TAB 1: CARGA DIARIA (Enfocada 100% en la carga) */
           <>
             {/* Hero & Selection Controls */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-xl mb-4 sm:mb-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl sm:rounded-3xl p-3 sm:p-6 shadow-xl mb-4 sm:mb-6">
+          <div className="grid grid-cols-2 gap-2 sm:gap-4">
             {/* Supervisor Selector */}
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  <UserCheck className="w-4 h-4 text-amber-400" />
-                  <span>Supervisora a Cargo</span>
+            <div className="min-w-0">
+              <label className="block text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5 sm:mb-2 flex items-center justify-between truncate">
+                <span className="flex items-center gap-1 sm:gap-1.5 truncate">
+                  <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 shrink-0" />
+                  <span className="truncate">Supervisora a Cargo</span>
                 </span>
                 {!isUserAdmin(currentUser) && (
-                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                  <span className="hidden sm:inline text-[10px] text-slate-500 font-bold uppercase tracking-wider">
                     Asignada por sesión
                   </span>
                 )}
@@ -1310,27 +1356,27 @@ export default function App() {
                 />
               ) : (
                 /* Supervisor: Locked strictly to their own account */
-                <div className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl px-4 py-3 text-white font-bold text-base shadow-inner flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                <div className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl px-2.5 sm:px-4 py-2 sm:py-3 text-white font-bold text-xs sm:text-base shadow-inner flex items-center justify-between">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                     <UserAvatar
                       user={currentUser}
-                      className="w-7 h-7 rounded-lg"
+                      className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg shrink-0"
                       textClassName="text-xs font-extrabold text-white"
                     />
-                    <span>{currentUser?.name}</span>
+                    <span className="truncate">{currentUser?.name}</span>
                   </div>
-                  <span className="text-xs text-amber-400 font-extrabold bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">
-                    {activeStores.length} locales
+                  <span className="text-[10px] sm:text-xs text-amber-400 font-extrabold bg-amber-500/10 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-xl border border-amber-500/20 shrink-0">
+                    {activeStores.length} <span className="hidden sm:inline">locales</span>
                   </span>
                 </div>
               )}
             </div>
 
             {/* Date Selector */}
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-amber-400" />
-                <span>Día a Cargar</span>
+            <div className="min-w-0">
+              <label className="block text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5 sm:mb-2 flex items-center gap-1 sm:gap-1.5 truncate">
+                <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 shrink-0" />
+                <span className="truncate">Día a Cargar</span>
               </label>
 
               <CustomDatePicker
@@ -1347,6 +1393,25 @@ export default function App() {
                 }}
               />
             </div>
+          </div>
+
+          {/* Banner de Carga Rápida con Excel */}
+          <div className="mt-3.5 sm:mt-4 pt-3.5 sm:pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 text-xs text-slate-300 text-center sm:text-left">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0 hidden sm:block" />
+              <span>
+                ¿Tenés la planilla de ventas de hoy? Cargá todas las tiendas de <strong className="text-white">{activeSupName}</strong> automáticamente.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsExcelModalOpen(true)}
+              className="w-auto px-4 py-2 sm:py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 border border-emerald-500/50 hover:border-emerald-400 text-emerald-300 hover:text-white font-extrabold text-xs sm:text-sm inline-flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/40 transition active:scale-95 cursor-pointer shrink-0"
+              title="Importar comandas, ventas y unidades desde planilla Excel"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>Importar Excel</span>
+            </button>
           </div>
         </div>
 
@@ -1407,7 +1472,7 @@ export default function App() {
         {/* Action buttons toolbar positioned directly below the store sheet */}
         {activeStores.length > 0 && (
           <div className="mt-6 bg-slate-900/60 border border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xl">
-            <div className="grid grid-cols-4 gap-2 sm:gap-3 max-w-4xl mx-auto items-stretch">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 max-w-5xl mx-auto items-stretch">
               {/* Primary Save Button */}
               <button
                 type="button"
@@ -1428,6 +1493,17 @@ export default function App() {
                     ? `Guardar (${dirtyStoreIds.size})`
                     : 'Guardar'}
                 </span>
+              </button>
+
+              {/* Import Excel Button */}
+              <button
+                type="button"
+                onClick={() => setIsExcelModalOpen(true)}
+                className="py-3 px-2 sm:px-4 rounded-2xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-800/60 hover:border-emerald-500/60 text-emerald-300 hover:text-white font-bold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 shadow-md shadow-emerald-950/30 cursor-pointer"
+                title="Importar carga diaria desde planilla Excel"
+              >
+                <FileSpreadsheet className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span className="truncate">Importar Excel</span>
               </button>
 
               {/* Discard changes button (always visible, disabled if no dirty stores) */}
@@ -1465,7 +1541,7 @@ export default function App() {
                 title="Exportar a CSV / Excel"
               >
                 <span className="text-base shrink-0 leading-none">📊</span>
-                <span className="truncate">Excel</span>
+                <span className="truncate">Exportar</span>
               </button>
             </div>
           </div>
@@ -1484,6 +1560,18 @@ export default function App() {
       <DatabaseModal
         isOpen={isDbModalOpen}
         onClose={() => setIsDbModalOpen(false)}
+      />
+
+      {/* Excel Import Modal */}
+      <ExcelImportModal
+        isOpen={isExcelModalOpen}
+        onClose={() => setIsExcelModalOpen(false)}
+        allStores={config.tiendas}
+        activeStores={activeStores}
+        currentUser={currentUser}
+        activeSupName={activeSupName}
+        selectedFecha={selectedFecha}
+        onApplyImport={handleApplyExcelImport}
       />
     </div>
   );

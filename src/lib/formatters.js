@@ -124,3 +124,31 @@ export function exportCsv(filename, rows) {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+/**
+ * Retorna las clases de Tailwind responsivas para ajustar dinámicamente el tamaño de fuente
+ * según la cantidad de dígitos / longitud del número formateado, evitando que los números
+ * con muchos dígitos (ej: miles de millones en pesos) se corten en las cards de métricas.
+ */
+export function getCardNumberFontSize(value, { isMoney = false } = {}) {
+  const num = typeof value === 'number' ? Math.abs(value) : Math.abs(Number(value) || 0);
+
+  // Si supera 1.000 millones (10+ dígitos, ej: $ 5.303.602.607,5 -> 17+ caracteres)
+  if (num >= 1_000_000_000) {
+    return 'text-lg sm:text-xl lg:text-2xl xl:text-[25px]';
+  }
+
+  // Si supera 100 millones (9 dígitos, ej: $ 845.118.616,93 -> 15-16 caracteres)
+  if (num >= 100_000_000) {
+    return 'text-xl sm:text-2xl lg:text-[28px]';
+  }
+
+  // Si supera 10 millones (8 dígitos, ej: $ 54.120.300)
+  if (num >= 10_000_000) {
+    return 'text-xl sm:text-2xl lg:text-3xl';
+  }
+
+  // Tamaño estándar para números normales
+  return 'text-2xl sm:text-3xl lg:text-4xl';
+}
+

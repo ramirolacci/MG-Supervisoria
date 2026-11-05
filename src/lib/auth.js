@@ -65,14 +65,6 @@ export const SUPERVISOR_ACCOUNTS = [
     avatarColor: 'from-sky-500 to-indigo-600',
   },
   {
-    email: 'wandaruiz@migusto.com.ar',
-    password: 'MiGusto123.',
-    supId: 'sup_wanda',
-    name: 'Wanda Ruiz',
-    role: 'Supervisora de Tiendas',
-    avatarColor: 'from-amber-500 to-orange-600',
-  },
-  {
     email: 'evelyncedron@migusto.com.ar',
     password: 'MiGusto123.',
     supId: 'sup_evelyn',

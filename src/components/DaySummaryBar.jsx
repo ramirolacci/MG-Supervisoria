@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { ARS, INT } from '../lib/formatters';
+import { ARS, INT, getCardNumberFontSize } from '../lib/formatters';
 import { CheckCircle2, TrendingUp, ShoppingBag, Receipt, DollarSign } from 'lucide-react';
 import { gsap, useGSAP } from '../lib/animations';
 import { AnimatedNumber } from './AnimatedNumber';
@@ -87,52 +87,52 @@ export function DaySummaryBar({
         </div>
       </div>
 
-      {/* 2. DASHBOARD KPI CARDS: Same generous card size as StoreRow */}
+      {/* 2. DASHBOARD KPI CARDS: Responsive mobile layout (Venta top full-width, Comandas & Unidades 2-col below) and 3-col on desktop */}
       <div
         ref={cardsContainerRef}
-        className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 font-mono-numbers"
+        className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-4 font-mono-numbers"
       >
-        {/* Comandas */}
-        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-blue-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-blue-500/15 text-blue-400 border border-blue-500/20 shadow-sm shrink-0">
-                <Receipt className="w-5 h-5" />
+        {/* Comandas Totales */}
+        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-blue-500/40 rounded-2xl p-3 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group order-2 md:order-1 col-span-1">
+          <div className="flex items-center justify-between gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+            <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+              <div className="p-1.5 sm:p-2 rounded-xl bg-blue-500/15 text-blue-400 border border-blue-500/20 shadow-sm shrink-0">
+                <Receipt className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div>
-                <p className="text-[11px] font-black uppercase tracking-wider text-slate-400 font-sans">
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-400 font-sans truncate">
                   Comandas Totales
                 </p>
-                <p className="text-[10px] text-slate-500 font-sans">
-                  Pedidos registrados hoy
+                <p className="text-[9px] sm:text-[10px] text-slate-500 font-sans truncate">
+                  Pedidos registrados
                 </p>
               </div>
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 font-sans">
+            <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 font-sans">
               Tickets
             </span>
           </div>
 
-          <div className="my-2">
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
+          <div className="my-1 sm:my-2 min-h-[38px] sm:min-h-[44px] flex items-center">
+            <p className={`${getCardNumberFontSize(totals.c)} font-black text-white tracking-tight whitespace-nowrap`}>
               <AnimatedNumber value={totals.c} formatter={(v) => INT.format(v)} />
             </p>
           </div>
 
-          <div className="text-[11px] text-slate-400 font-sans flex items-center justify-between pt-2 border-t border-slate-800/60 mt-1">
-            <span>Progreso de locales</span>
-            <span className="font-bold text-slate-300 font-mono-numbers">
+          <div className="text-[10px] sm:text-[11px] text-slate-400 font-sans flex items-center justify-between pt-1.5 sm:pt-2 border-t border-slate-800/60 mt-1">
+            <span className="truncate">Progreso</span>
+            <span className="font-bold text-slate-300 font-mono-numbers shrink-0">
               {totalStores > 0 ? Math.round((loadedStores / totalStores) * 100) : 0}% completado
             </span>
           </div>
         </div>
 
-        {/* Venta Total */}
-        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-emerald-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group">
+        {/* Venta Total Neta */}
+        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-emerald-500/40 rounded-2xl p-3.5 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group order-1 md:order-2 col-span-2 md:col-span-1">
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 shadow-sm shrink-0">
-                <DollarSign className="w-5 h-5" />
+                <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div>
                 <p className="text-[11px] font-black uppercase tracking-wider text-slate-400 font-sans">
@@ -151,8 +151,8 @@ export function DaySummaryBar({
             )}
           </div>
 
-          <div className="my-2">
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-emerald-400 tracking-tight">
+          <div className="my-1.5 sm:my-2 min-h-[40px] sm:min-h-[44px] flex items-center">
+            <p className={`${getCardNumberFontSize(totals.v, { isMoney: true })} font-black text-emerald-400 tracking-tight whitespace-nowrap`}>
               <AnimatedNumber value={totals.v} formatter={(v) => ARS.format(v)} />
             </p>
           </div>
@@ -165,37 +165,37 @@ export function DaySummaryBar({
           </div>
         </div>
 
-        {/* Unidades */}
-        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-purple-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-purple-500/15 text-purple-400 border border-purple-500/20 shadow-sm shrink-0">
-                <ShoppingBag className="w-5 h-5" />
+        {/* Unidades Totales */}
+        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-purple-500/40 rounded-2xl p-3 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group order-3 md:order-3 col-span-1">
+          <div className="flex items-center justify-between gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+            <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+              <div className="p-1.5 sm:p-2 rounded-xl bg-purple-500/15 text-purple-400 border border-purple-500/20 shadow-sm shrink-0">
+                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div>
-                <p className="text-[11px] font-black uppercase tracking-wider text-slate-400 font-sans">
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-400 font-sans truncate">
                   Unidades Totales
                 </p>
-                <p className="text-[10px] text-slate-500 font-sans">
-                  Empanadas elaboradas
+                <p className="text-[9px] sm:text-[10px] text-slate-500 font-sans truncate">
+                  Empanadas
                 </p>
               </div>
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 font-sans">
+            <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 font-sans">
               Empanadas
             </span>
           </div>
 
-          <div className="my-2">
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-purple-300 tracking-tight">
+          <div className="my-1 sm:my-2 min-h-[38px] sm:min-h-[44px] flex items-center">
+            <p className={`${getCardNumberFontSize(totals.u)} font-black text-purple-300 tracking-tight whitespace-nowrap`}>
               <AnimatedNumber value={totals.u} formatter={(v) => INT.format(v)} />
             </p>
           </div>
 
-          <div className="text-[11px] text-slate-400 font-sans flex items-center justify-between pt-2 border-t border-slate-800/60 mt-1">
-            <span>Unidades por comanda</span>
-            <span className="font-bold text-purple-300 font-mono-numbers">
-              {totals.c > 0 ? `${(totals.u / totals.c).toFixed(1)} unid.` : '–'}
+          <div className="text-[10px] sm:text-[11px] text-slate-400 font-sans flex items-center justify-between pt-1.5 sm:pt-2 border-t border-slate-800/60 mt-1">
+            <span className="truncate">Unid./cmda</span>
+            <span className="font-bold text-purple-300 font-mono-numbers shrink-0">
+              {totals.c > 0 ? `${(totals.u / totals.c).toFixed(1)}` : '–'}
             </span>
           </div>
         </div>

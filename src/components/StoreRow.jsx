@@ -66,27 +66,27 @@ export function StoreRow({
       }`}
     >
       {/* Top line: Name & Status & Live indicators */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <div className="flex items-center gap-2.5">
-          <div className="p-1.5 rounded-lg bg-slate-800 text-slate-300">
-            <Store className="w-4 h-4 text-amber-400" />
+      <div className="flex items-center justify-between gap-2 mb-2.5 sm:mb-3 min-w-0">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 overflow-x-auto scrollbar-none py-0.5">
+          <div className="p-1 sm:p-1.5 rounded-lg bg-slate-800 text-slate-300 shrink-0">
+            <Store className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
           </div>
-          <span className="font-bold text-white text-base sm:text-lg tracking-tight">
+          <span className="font-bold text-white text-sm sm:text-lg tracking-tight whitespace-nowrap shrink-0">
             {tienda.name}
           </span>
           {tienda.isPropia && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-sm">
+            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold tracking-wider uppercase bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-sm whitespace-nowrap shrink-0">
               ✨ Propia MG
             </span>
           )}
           {tienda.isExperience && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-purple-500/15 text-purple-300 border border-purple-500/30 shadow-sm">
+            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold tracking-wider uppercase bg-purple-500/15 text-purple-300 border border-purple-500/30 shadow-sm whitespace-nowrap shrink-0">
               🌟 Experience
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {ticketPromedio !== null && (
             <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 text-xs font-semibold text-slate-300 font-mono-numbers">
               <TrendingUp className="w-3 h-3 text-emerald-400" />
@@ -95,7 +95,7 @@ export function StoreRow({
           )}
 
           <span
-            className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full border ${statusBadge.bg}`}
+            className={`inline-flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border shrink-0 whitespace-nowrap ${statusBadge.bg}`}
           >
             <span className={`w-1.5 h-1.5 rounded-full ${statusBadge.dot}`} />
             {statusBadge.label}

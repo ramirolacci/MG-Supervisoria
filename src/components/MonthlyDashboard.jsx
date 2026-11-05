@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { ARS, INT, DEC, fmtDay } from '../lib/formatters';
+import { ARS, INT, DEC, fmtDay, getCardNumberFontSize } from '../lib/formatters';
 import { CustomMonthPicker } from './CustomMonthPicker';
 import { Calendar, DollarSign, Receipt, ShoppingBag, Target, FileText } from 'lucide-react';
 import { gsap, useGSAP } from '../lib/animations';
@@ -56,10 +56,10 @@ export function MonthlyDashboard({
         </div>
       </div>
 
-      {/* KPI Cards Grid */}
-      <div ref={kpiGridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 font-mono-numbers">
+      {/* KPI Cards Grid: Responsive mobile layout (Venta 1st row, Comandas & Unidades 2x2 2nd row, Cumplimiento 3rd row) */}
+      <div ref={kpiGridRef} className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 font-mono-numbers">
         {/* Venta Acumulada */}
-        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-emerald-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group min-h-[175px]">
+        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-emerald-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group min-h-[170px] sm:min-h-[175px] order-1 lg:order-1 col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 shadow-sm shrink-0">
@@ -79,8 +79,8 @@ export function MonthlyDashboard({
             </span>
           </div>
 
-          <div className="my-2">
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-emerald-400 tracking-tight">
+          <div className="my-2 min-h-[44px] flex items-center">
+            <p className={`${getCardNumberFontSize(kpis.venta, { isMoney: true })} font-black text-emerald-400 tracking-tight whitespace-nowrap`}>
               <AnimatedNumber value={kpis.venta} formatter={(v) => ARS.format(v)} />
             </p>
           </div>
@@ -98,74 +98,72 @@ export function MonthlyDashboard({
         </div>
 
         {/* Comandas Totales */}
-        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-blue-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group min-h-[175px]">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-blue-500/15 text-blue-400 border border-blue-500/20 shadow-sm shrink-0">
-                <Receipt className="w-5 h-5" />
+        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-blue-500/40 rounded-2xl p-3.5 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group min-h-[160px] sm:min-h-[175px] order-2 lg:order-2 col-span-1">
+          <div className="flex items-center justify-between gap-1.5 sm:gap-2 mb-2">
+            <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+              <div className="p-1.5 sm:p-2 rounded-xl bg-blue-500/15 text-blue-400 border border-blue-500/20 shadow-sm shrink-0">
+                <Receipt className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div>
-                <p className="text-[11px] font-black uppercase tracking-wider text-slate-400 font-sans">
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-400 font-sans truncate">
                   Comandas Totales
                 </p>
-                <p className="text-[10px] text-slate-500 font-sans">
+                <p className="text-[9px] sm:text-[10px] text-slate-500 font-sans truncate">
                   Pedidos acumulados
                 </p>
               </div>
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 font-sans">
+            <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 font-sans">
               Tickets
             </span>
           </div>
 
-          <div className="my-2">
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
+          <div className="my-2 min-h-[44px] flex items-center">
+            <p className={`${getCardNumberFontSize(kpis.comandas)} font-black text-white tracking-tight whitespace-nowrap`}>
               <AnimatedNumber value={kpis.comandas} formatter={(v) => INT.format(v)} />
             </p>
           </div>
 
-          <div className="text-[11px] text-slate-400 font-sans flex items-center justify-between pt-2 border-t border-slate-800/60 mt-1">
-            <span>Cargas registradas</span>
-            <span className="font-bold text-blue-300 font-mono-numbers">
-              {kpis.cargasRealizadas} guardadas
+          <div className="text-[10px] sm:text-[11px] text-slate-400 font-sans flex items-center justify-between pt-2 border-t border-slate-800/60 mt-1">
+            <span className="truncate">Cargas</span>
+            <span className="font-bold text-blue-300 font-mono-numbers shrink-0">
+              {kpis.cargasRealizadas}
             </span>
           </div>
         </div>
 
         {/* Unidades Totales */}
-        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-purple-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group min-h-[175px]">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-purple-500/15 text-purple-400 border border-purple-500/20 shadow-sm shrink-0">
-                <ShoppingBag className="w-5 h-5" />
+        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-purple-500/40 rounded-2xl p-3.5 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group min-h-[160px] sm:min-h-[175px] order-3 lg:order-3 col-span-1">
+          <div className="flex items-center justify-between gap-1.5 sm:gap-2 mb-2">
+            <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+              <div className="p-1.5 sm:p-2 rounded-xl bg-purple-500/15 text-purple-400 border border-purple-500/20 shadow-sm shrink-0">
+                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div>
-                <p className="text-[11px] font-black uppercase tracking-wider text-slate-400 font-sans">
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-400 font-sans truncate">
                   Unidades Totales
                 </p>
-                <p className="text-[10px] text-slate-500 font-sans">
-                  Empanadas acumuladas
+                <p className="text-[9px] sm:text-[10px] text-slate-500 font-sans truncate">
+                  Empanadas
                 </p>
               </div>
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 font-sans">
+            <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 font-sans">
               Empanadas
             </span>
           </div>
 
-          <div className="my-2">
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-purple-300 tracking-tight">
+          <div className="my-2 min-h-[44px] flex items-center">
+            <p className={`${getCardNumberFontSize(kpis.unidades)} font-black text-purple-300 tracking-tight whitespace-nowrap`}>
               <AnimatedNumber value={kpis.unidades} formatter={(v) => INT.format(v)} />
             </p>
           </div>
 
-          <div className="text-[11px] text-slate-400 font-sans flex items-center justify-between pt-2 border-t border-slate-800/60 mt-1">
-            <span>Unidades por comanda</span>
-            <span className="font-bold text-purple-300 font-mono-numbers">
+          <div className="text-[10px] sm:text-[11px] text-slate-400 font-sans flex items-center justify-between pt-2 border-t border-slate-800/60 mt-1">
+            <span className="truncate">Unid./cmda</span>
+            <span className="font-bold text-purple-300 font-mono-numbers shrink-0">
               {kpis.unidPorComanda ? (
-                <>
-                  <AnimatedNumber value={kpis.unidPorComanda} decimals={1} formatter={(v) => DEC.format(v)} /> unid.
-                </>
+                <AnimatedNumber value={kpis.unidPorComanda} decimals={1} formatter={(v) => DEC.format(v)} />
               ) : (
                 '–'
               )}
@@ -174,7 +172,7 @@ export function MonthlyDashboard({
         </div>
 
         {/* Cumplimiento de Carga */}
-        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-teal-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group min-h-[175px]">
+        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-teal-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group min-h-[170px] sm:min-h-[175px] order-4 lg:order-4 col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-xl bg-teal-500/15 text-teal-400 border border-teal-500/20 shadow-sm shrink-0">
@@ -194,8 +192,8 @@ export function MonthlyDashboard({
             </span>
           </div>
 
-          <div className="my-2">
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-teal-300 tracking-tight">
+          <div className="my-2 min-h-[44px] flex items-center">
+            <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-teal-300 tracking-tight whitespace-nowrap">
               <AnimatedNumber value={kpis.cumplimientoPorcentaje} formatter={(v) => `${v}%`} />
             </p>
           </div>

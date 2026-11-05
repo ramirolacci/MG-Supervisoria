@@ -28,7 +28,7 @@ import {
   Check,
   ChevronDown
 } from 'lucide-react';
-import { ARS, INT, DEC, parseYmd, pad, parseCount, parseMoney, formatMoneyInput, todayStr, formatThousands, MONTHF } from '../lib/formatters';
+import { ARS, INT, DEC, parseYmd, pad, parseCount, parseMoney, formatMoneyInput, todayStr, formatThousands, MONTHF, getCardNumberFontSize } from '../lib/formatters';
 import { exportHistoryPDF } from '../lib/pdfExport';
 import { canUserDeleteRecords, canUserEditRecords } from '../lib/auth';
 import { CustomDatePicker } from './CustomDatePicker';
@@ -85,25 +85,25 @@ function HistorySupervisorFilter({ value, onChange, supervisoras }) {
   }, [isOpen]);
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div className="relative w-full sm:w-auto" ref={containerRef}>
       <button
         type="button"
         onClick={() => (isOpen ? closeDropdown() : openDropdown())}
-        className="bg-slate-950 border border-slate-800 hover:border-amber-500/50 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-200 font-bold flex items-center justify-between gap-2 cursor-pointer transition shadow-inner group min-w-[170px]"
+        className="w-full bg-slate-950 border border-slate-800 hover:border-amber-500/50 rounded-xl px-2.5 sm:px-3 py-2 text-xs sm:text-sm text-slate-200 font-bold flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer transition shadow-inner group sm:min-w-[170px]"
       >
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
           {isAll ? (
-            <span className="text-xs">🌟</span>
+            <span className="text-xs shrink-0">🌟</span>
           ) : (
             <UserAvatar
               user={selectedSup}
               name={selectedSup?.name}
               avatarColor={selectedSup?.avatarColor}
-              className="w-5 h-5 rounded-md"
-              textClassName="text-[10px] font-extrabold text-white"
+              className="w-4 h-4 sm:w-5 sm:h-5 rounded-md shrink-0"
+              textClassName="text-[9px] sm:text-[10px] font-extrabold text-white"
             />
           )}
-          <span className="truncate max-w-[130px] sm:max-w-[170px] text-left">
+          <span className="truncate text-left">
             {isAll ? 'Todas las supervisoras' : selectedSup?.name || 'Supervisora'}
           </span>
         </div>
@@ -117,7 +117,7 @@ function HistorySupervisorFilter({ value, onChange, supervisoras }) {
       {isOpen && (
         <div
           ref={popoverRef}
-          className="absolute top-full right-0 mt-2 z-50 min-w-[220px] bg-slate-900/95 border border-slate-700/80 rounded-2xl p-2 shadow-2xl backdrop-blur-xl origin-top max-h-72 overflow-y-auto"
+          className="absolute top-full left-0 sm:left-auto sm:right-0 mt-2 z-50 min-w-[220px] max-w-[calc(100vw-32px)] bg-slate-900/95 border border-slate-700/80 rounded-2xl p-2 shadow-2xl backdrop-blur-xl origin-top max-h-72 overflow-y-auto"
         >
           {/* Todas las supervisoras */}
           <button
@@ -226,15 +226,15 @@ function HistoryMonthFilter({ value, onChange, availableMonths }) {
   }, [isOpen]);
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div className="relative w-full sm:w-auto" ref={containerRef}>
       <button
         type="button"
         onClick={() => (isOpen ? closeDropdown() : openDropdown())}
-        className="bg-slate-950 border border-slate-800 hover:border-amber-500/50 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-200 font-bold flex items-center justify-between gap-2 cursor-pointer transition shadow-inner group font-mono-numbers min-w-[150px]"
+        className="w-full bg-slate-950 border border-slate-800 hover:border-amber-500/50 rounded-xl px-2.5 sm:px-3 py-2 text-xs sm:text-sm text-slate-200 font-bold flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer transition shadow-inner group font-mono-numbers sm:min-w-[150px]"
       >
-        <div className="flex items-center gap-2 min-w-0">
-          <Calendar className="w-4 h-4 text-amber-400 shrink-0" />
-          <span className="truncate max-w-[120px] sm:max-w-[150px] text-left">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+          <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 shrink-0" />
+          <span className="truncate text-left">
             {formatMonthLabel(value)}
           </span>
         </div>
@@ -248,7 +248,7 @@ function HistoryMonthFilter({ value, onChange, availableMonths }) {
       {isOpen && (
         <div
           ref={popoverRef}
-          className="absolute top-full right-0 mt-2 z-50 min-w-[200px] bg-slate-900/95 border border-slate-700/80 rounded-2xl p-2 shadow-2xl backdrop-blur-xl origin-top max-h-72 overflow-y-auto font-mono-numbers"
+          className="absolute top-full right-0 mt-2 z-50 min-w-[200px] max-w-[calc(100vw-32px)] bg-slate-900/95 border border-slate-700/80 rounded-2xl p-2 shadow-2xl backdrop-blur-xl origin-top max-h-72 overflow-y-auto font-mono-numbers"
         >
           {/* Todos los meses */}
           <button
@@ -651,10 +651,10 @@ export function HistoryRecordsSection({
         </div>
       </div>
 
-      {/* KPI Stats Cards de los registros filtrados */}
-      <div ref={statsGridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 font-mono-numbers">
-        {/* Registros */}
-        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-amber-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group min-h-[175px]">
+      {/* KPI Stats Cards de los registros filtrados: Mobile (Venta 1ra, Comandas y Empanadas 2x2 2da, Registros 3ra) */}
+      <div ref={statsGridRef} className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 font-mono-numbers">
+        {/* Registros Totales */}
+        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-amber-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group min-h-[160px] sm:min-h-[175px] order-4 lg:order-1 col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/20 shadow-sm shrink-0">
@@ -674,8 +674,8 @@ export function HistoryRecordsSection({
             </span>
           </div>
 
-          <div className="my-2">
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
+          <div className="my-2 min-h-[44px] flex items-center">
+            <p className={`${getCardNumberFontSize(filteredRecords.length)} font-black text-white tracking-tight whitespace-nowrap`}>
               <AnimatedNumber value={filteredRecords.length} formatter={(v) => INT.format(v)} />
             </p>
           </div>
@@ -689,7 +689,7 @@ export function HistoryRecordsSection({
         </div>
 
         {/* Venta Acumulada */}
-        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-emerald-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group min-h-[175px]">
+        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-emerald-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group min-h-[160px] sm:min-h-[175px] order-1 lg:order-2 col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 shadow-sm shrink-0">
@@ -709,8 +709,8 @@ export function HistoryRecordsSection({
             </span>
           </div>
 
-          <div className="my-2">
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-emerald-400 tracking-tight">
+          <div className="my-2 min-h-[44px] flex items-center">
+            <p className={`${getCardNumberFontSize(totals.venta, { isMoney: true })} font-black text-emerald-400 tracking-tight whitespace-nowrap`}>
               <AnimatedNumber value={totals.venta} formatter={(v) => ARS.format(v)} />
             </p>
           </div>
@@ -723,71 +723,71 @@ export function HistoryRecordsSection({
           </div>
         </div>
 
-        {/* Comandas */}
-        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-blue-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group min-h-[175px]">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-blue-500/15 text-blue-400 border border-blue-500/20 shadow-sm shrink-0">
-                <Receipt className="w-5 h-5" />
+        {/* Comandas Totales */}
+        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-blue-500/40 rounded-2xl p-3.5 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group min-h-[160px] sm:min-h-[175px] order-2 lg:order-3 col-span-1">
+          <div className="flex items-center justify-between gap-1.5 sm:gap-2 mb-2">
+            <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+              <div className="p-1.5 sm:p-2 rounded-xl bg-blue-500/15 text-blue-400 border border-blue-500/20 shadow-sm shrink-0">
+                <Receipt className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div>
-                <p className="text-[11px] font-black uppercase tracking-wider text-slate-400 font-sans">
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-400 font-sans truncate">
                   Comandas Totales
                 </p>
-                <p className="text-[10px] text-slate-500 font-sans">
+                <p className="text-[9px] sm:text-[10px] text-slate-500 font-sans truncate">
                   Pedidos acumulados
                 </p>
               </div>
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 font-sans">
+            <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 font-sans">
               Tickets
             </span>
           </div>
 
-          <div className="my-2">
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
+          <div className="my-2 min-h-[44px] flex items-center">
+            <p className={`${getCardNumberFontSize(totals.comandas)} font-black text-white tracking-tight whitespace-nowrap`}>
               <AnimatedNumber value={totals.comandas} formatter={(v) => INT.format(v)} />
             </p>
           </div>
 
-          <div className="text-[11px] text-slate-400 font-sans flex items-center justify-between pt-2 border-t border-slate-800/60 mt-1">
-            <span>Ticket promedio</span>
-            <span className="font-bold text-blue-300 font-mono-numbers">
+          <div className="text-[10px] sm:text-[11px] text-slate-400 font-sans flex items-center justify-between pt-2 border-t border-slate-800/60 mt-1">
+            <span className="truncate">Ticket prom.</span>
+            <span className="font-bold text-blue-300 font-mono-numbers shrink-0">
               {totals.ticket ? ARS.format(totals.ticket) : '–'}
             </span>
           </div>
         </div>
 
-        {/* Empanadas */}
-        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-purple-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group min-h-[175px]">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-purple-500/15 text-purple-400 border border-purple-500/20 shadow-sm shrink-0">
-                <ShoppingBag className="w-5 h-5" />
+        {/* Empanadas Totales */}
+        <div className="bg-slate-900/90 border border-slate-800/90 hover:border-purple-500/40 rounded-2xl p-3.5 sm:p-5 relative overflow-hidden flex flex-col justify-between gsap-card shadow-xl group min-h-[160px] sm:min-h-[175px] order-3 lg:order-4 col-span-1">
+          <div className="flex items-center justify-between gap-1.5 sm:gap-2 mb-2">
+            <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+              <div className="p-1.5 sm:p-2 rounded-xl bg-purple-500/15 text-purple-400 border border-purple-500/20 shadow-sm shrink-0">
+                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div>
-                <p className="text-[11px] font-black uppercase tracking-wider text-slate-400 font-sans">
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-400 font-sans truncate">
                   Empanadas Totales
                 </p>
-                <p className="text-[10px] text-slate-500 font-sans">
+                <p className="text-[9px] sm:text-[10px] text-slate-500 font-sans truncate">
                   Unidades acumuladas
                 </p>
               </div>
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 font-sans">
+            <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 font-sans">
               Empanadas
             </span>
           </div>
 
-          <div className="my-2">
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-purple-300 tracking-tight">
+          <div className="my-2 min-h-[44px] flex items-center">
+            <p className={`${getCardNumberFontSize(totals.unidades)} font-black text-purple-300 tracking-tight whitespace-nowrap`}>
               <AnimatedNumber value={totals.unidades} formatter={(v) => INT.format(v)} />
             </p>
           </div>
 
-          <div className="text-[11px] text-slate-400 font-sans flex items-center justify-between pt-2 border-t border-slate-800/60 mt-1">
-            <span>Unidades por comanda</span>
-            <span className="font-bold text-purple-300 font-mono-numbers">
+          <div className="text-[10px] sm:text-[11px] text-slate-400 font-sans flex items-center justify-between pt-2 border-t border-slate-800/60 mt-1">
+            <span className="truncate">Unid./cmd</span>
+            <span className="font-bold text-purple-300 font-mono-numbers shrink-0">
               {totals.unidPorComanda ? `${totals.unidPorComanda.toFixed(1)} unid.` : '–'}
             </span>
           </div>
@@ -815,29 +815,33 @@ export function HistoryRecordsSection({
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Selector de Supervisora Custom */}
-          <HistorySupervisorFilter
-            value={selectedSup}
-            onChange={setSelectedSup}
-            supervisoras={supervisoras}
-          />
+        <div className="w-full md:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          {/* Desplegables de Supervisora y Mes en una sola línea en mobile */}
+          <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
+            {/* Selector de Supervisora Custom */}
+            <HistorySupervisorFilter
+              value={selectedSup}
+              onChange={setSelectedSup}
+              supervisoras={supervisoras}
+            />
 
-          {/* Selector de Mes Custom */}
-          <HistoryMonthFilter
-            value={selectedMonth}
-            onChange={setSelectedMonth}
-            availableMonths={availableMonths}
-          />
+            {/* Selector de Mes Custom */}
+            <HistoryMonthFilter
+              value={selectedMonth}
+              onChange={setSelectedMonth}
+              availableMonths={availableMonths}
+            />
+          </div>
 
           {(searchTerm || selectedSup !== 'todos' || selectedMonth !== 'todos') && (
             <button
+              type="button"
               onClick={() => {
                 setSearchTerm('');
                 setSelectedSup('todos');
                 setSelectedMonth('todos');
               }}
-              className="px-2.5 py-2 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 rounded-xl transition"
+              className="px-3 py-2 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 rounded-xl transition text-center cursor-pointer border border-rose-900/30 sm:border-transparent shrink-0"
             >
               Limpiar
             </button>
@@ -1428,7 +1432,7 @@ export function HistoryRecordsSection({
                         className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold transition active:scale-95 cursor-pointer"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
-                        <span>Modificar registro</span>
+                        <span>Modificar</span>
                       </button>
                     )}
                     <button

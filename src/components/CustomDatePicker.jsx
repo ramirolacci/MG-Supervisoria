@@ -10,7 +10,7 @@ const MONTH_NAMES = [
 
 const DAY_NAMES = ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'];
 
-export function CustomDatePicker({ value, onChange, minDate, maxDate, compact = false }) {
+export function CustomDatePicker({ value, onChange, minDate, maxDate, compact = false, align = 'right' }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
   const popoverRef = useRef(null);
@@ -146,28 +146,28 @@ export function CustomDatePicker({ value, onChange, minDate, maxDate, compact = 
         }}
         className={`w-full bg-slate-900 border border-slate-700 hover:border-amber-400 focus:border-amber-400 text-white font-mono-numbers flex items-center justify-between cursor-pointer transition group ${
           compact
-            ? 'rounded-xl px-3 py-2 text-xs font-bold'
-            : 'rounded-2xl px-4 py-3 text-base font-bold shadow-inner'
+            ? 'rounded-xl px-2.5 sm:px-3 py-2 text-xs font-bold'
+            : 'rounded-2xl px-2.5 sm:px-4 py-2 sm:py-3 text-xs sm:text-base font-bold shadow-inner'
         }`}
       >
-        <div className="flex items-center gap-2">
-          <span className={`${compact ? 'text-amber-400 font-bold font-mono text-xs' : 'text-amber-300 font-black text-lg tracking-wide'}`}>
+        <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+          <span className={`${compact ? 'text-amber-400 font-bold font-mono text-xs' : 'text-amber-300 font-black text-xs sm:text-base tracking-wide'} truncate`}>
             {`${d}/${m}/${y}`}
           </span>
           {!compact && (value === todayStr() ? (
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-sans">
+            <span className="text-[10px] sm:text-[11px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-sans shrink-0">
               Hoy
             </span>
           ) : value === yday ? (
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-sans">
+            <span className="text-[10px] sm:text-[11px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-sans shrink-0">
               Ayer
             </span>
           ) : null)}
         </div>
 
-        <div className="flex items-center gap-1.5 text-xs text-slate-400 group-hover:text-amber-400 font-sans transition">
-          {!compact && <span>{isOpen ? 'Cerrar' : 'Elegir fecha'}</span>}
-          <CalendarIcon className={`${compact ? 'w-3.5 h-3.5 text-sky-400' : 'w-4 h-4 text-amber-400'}`} />
+        <div className="flex items-center gap-1.5 text-xs text-slate-400 group-hover:text-amber-400 font-sans transition shrink-0 ml-1">
+          {!compact && <span className="hidden md:inline">{isOpen ? 'Cerrar' : 'Elegir fecha'}</span>}
+          <CalendarIcon className={`${compact ? 'w-3.5 h-3.5 text-sky-400' : 'w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400'}`} />
         </div>
       </button>
 
@@ -175,7 +175,9 @@ export function CustomDatePicker({ value, onChange, minDate, maxDate, compact = 
       {isOpen && (
         <div
           ref={popoverRef}
-          className="absolute top-full left-0 mt-2 z-50 w-[calc(100vw-48px)] sm:w-80 max-w-[340px] bg-slate-900 border border-slate-700/80 rounded-2xl p-4 shadow-2xl shadow-black/80 backdrop-blur-xl origin-top-left"
+          className={`absolute top-full mt-2 z-50 w-[min(calc(100vw-28px),320px)] sm:w-80 bg-slate-900 border border-slate-700/80 rounded-2xl p-3 sm:p-4 shadow-2xl shadow-black/80 backdrop-blur-xl ${
+            align === 'left' ? 'left-0 origin-top-left' : 'right-0 origin-top-right'
+          }`}
         >
           {/* Calendar Header */}
           <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">

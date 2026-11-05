@@ -8,5 +8,32 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    {
+      name: 'redirect-dev-base',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          const rawUrl = req.url || '';
+          const [pathname, search] = rawUrl.split('?');
+          const query = search ? `?${search}` : '';
+
+          if (pathname === '/operaciones/supervisoria') {
+            res.writeHead(301, { Location: `/operaciones/supervisoria/${query}` });
+            res.end();
+            return;
+          }
+          if (pathname === '/' || pathname === '') {
+            res.writeHead(302, { Location: `/operaciones/supervisoria/${query}` });
+            res.end();
+            return;
+          }
+          if (pathname === '/favicon.ico') {
+            res.writeHead(302, { Location: '/operaciones/supervisoria/favicon.ico' });
+            res.end();
+            return;
+          }
+          next();
+        });
+      },
+    },
   ],
 })
