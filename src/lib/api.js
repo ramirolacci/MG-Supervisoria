@@ -243,16 +243,43 @@ export const api = {
     return true;
   },
 
+  // Helper para consultar todas las filas con paginación Range (evita el tope de 1000 registros por query de Supabase)
+  async _fetchAllSupabaseRows(buildQuery) {
+    const PAGE_SIZE = 1000;
+    let allData = [];
+    let from = 0;
+
+    while (true) {
+      const to = from + PAGE_SIZE - 1;
+      const { data, error } = await buildQuery().range(from, to);
+      if (error) {
+        throw error;
+      }
+      if (!Array.isArray(data) || data.length === 0) {
+        break;
+      }
+      allData = allData.concat(data);
+      if (data.length < PAGE_SIZE) {
+        break;
+      }
+      from += PAGE_SIZE;
+    }
+    return allData;
+  },
+
   // Cargas del mes
   async getCargasMes(mes) {
     const supabase = getSupabase();
     if (supabase) {
       try {
-        const { data, error } = await supabase
-          .from('mg_cargas')
-          .select('*')
-          .eq('mes', mes);
-        if (!error && Array.isArray(data)) {
+        const data = await this._fetchAllSupabaseRows(() =>
+          supabase
+            .from('mg_cargas')
+            .select('*')
+            .eq('mes', mes)
+        );
+
+        if (Array.isArray(data)) {
           return data.map((row) => ({
             id: row.id,
             tiendaId: row.tienda_id,
@@ -287,13 +314,16 @@ export const api = {
     const supabase = getSupabase();
     if (supabase) {
       try {
-        const { data, error } = await supabase
-          .from('mg_cargas')
-          .select('*')
-          .gte('fecha', fechaDesde)
-          .lte('fecha', fechaHasta)
-          .order('fecha', { ascending: false });
-        if (!error && Array.isArray(data)) {
+        const data = await this._fetchAllSupabaseRows(() =>
+          supabase
+            .from('mg_cargas')
+            .select('*')
+            .gte('fecha', fechaDesde)
+            .lte('fecha', fechaHasta)
+            .order('fecha', { ascending: false })
+        );
+
+        if (Array.isArray(data)) {
           return data.map((row) => ({
             id: row.id,
             tiendaId: row.tienda_id,
@@ -328,12 +358,15 @@ export const api = {
     const supabase = getSupabase();
     if (supabase) {
       try {
-        const { data, error } = await supabase
-          .from('mg_cargas')
-          .select('*')
-          .order('fecha', { ascending: false })
-          .order('tienda_nombre', { ascending: true });
-        if (!error && Array.isArray(data)) {
+        const data = await this._fetchAllSupabaseRows(() =>
+          supabase
+            .from('mg_cargas')
+            .select('*')
+            .order('fecha', { ascending: false })
+            .order('tienda_nombre', { ascending: true })
+        );
+
+        if (Array.isArray(data)) {
           return data.map((row) => ({
             id: row.id,
             tiendaId: row.tienda_id,
@@ -487,6 +520,95 @@ export const api = {
     }
 
     return payload;
+  },
+
+  // Sincronizar automáticamente datos guardados localmente offline hacia Supabase
+  async syncLocalDataToSupabase() {
+    const supabase = getSupabase();
+    if (!supabase) return { syncedCargas: 0, syncedPlanes: 0 };
+
+    let syncedCargas = 0;
+    let syncedPlanes = 0;
+
+    // 1. Sincronizar cargas guardadas en localStorage (mg_local_cargas)
+    try {
+      const localRaw = localStorage.getItem(LS_CARGAS_KEY);
+      const localItems = localRaw ? JSON.parse(localRaw) : [];
+      if (Array.isArray(localItems) && localItems.length > 0) {
+        // Filtrar elementos válidos que tengan fecha y tiendaId
+        const validItems = localItems.filter((r) => r.tiendaId && r.fecha);
+        if (validItems.length > 0) {
+          const rows = validItems.map((r) => ({
+            id: r.id || `${r.tiendaId}_${r.fecha}`,
+            tienda_id: r.tiendaId,
+            tienda_nombre: r.tiendaNombre || '',
+            supervisora_id: r.supervisoraId || '',
+            supervisora_nombre: r.supervisoraNombre || '',
+            fecha: r.fecha,
+            mes: r.fecha.slice(0, 7),
+            comandas: Number(r.comandas) || 0,
+            venta: Number(r.venta) || 0,
+            unidades: Number(r.unidades) || 0,
+            ticket_promedio: r.comandas > 0 ? Math.round((Number(r.venta) / Number(r.comandas)) * 100) / 100 : null,
+            unidades_por_comanda: r.comandas > 0 ? Math.round((Number(r.unidades) / Number(r.comandas)) * 100) / 100 : null,
+            cargado_en: r.cargadoEn || new Date().toISOString(),
+            cargado_por: r.cargadoPor || null,
+            modificado_por: r.modificadoPor || null,
+            modificado_en: r.modificadoEn || null,
+          }));
+
+          // Upsert en lotes de hasta 100
+          for (let i = 0; i < rows.length; i += 100) {
+            const batch = rows.slice(i, i + 100);
+            const { error } = await supabase.from('mg_cargas').upsert(batch);
+            if (!error) {
+              syncedCargas += batch.length;
+            } else {
+              console.warn('Sync batch error on mg_cargas:', error);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Error syncing local cargas to Supabase:', e);
+    }
+
+    // 2. Sincronizar planes semanales guardados en localStorage (mg_planes_YYYY-MM-DD)
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('mg_planes_')) {
+          const semana = key.replace('mg_planes_', '');
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            try {
+              const plansMap = JSON.parse(raw);
+              for (const [supId, planData] of Object.entries(plansMap)) {
+                if (planData && typeof planData === 'object') {
+                  const planId = `${supId}_${semana}`;
+                  const { error } = await supabase.from('mg_planes').upsert({
+                    id: planId,
+                    sup_id: supId,
+                    semana,
+                    data: planData,
+                    updated_at: planData.actualizado || new Date().toISOString(),
+                  });
+                  if (!error) syncedPlanes++;
+                }
+              }
+            } catch (err) {}
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Error syncing local planes to Supabase:', e);
+    }
+
+    if (syncedCargas > 0 || syncedPlanes > 0) {
+      console.info(`[AutoSync] Sincronizados con éxito: ${syncedCargas} cargas y ${syncedPlanes} planes.`);
+    }
+
+    return { syncedCargas, syncedPlanes };
   },
 };
 

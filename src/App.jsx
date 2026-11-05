@@ -201,13 +201,22 @@ export default function App() {
   // Permiso para ver u operar la pestaña de historial
   const canAccessHistory = canUserAccessHistory(currentUser);
 
-  // 1. Initial Load: Config
+  // 1. Initial Load: Config & Auto-Sync de cargas locales offline a Supabase
   useEffect(() => {
     api.getConfig().then((cfg) => {
       setConfig(cfg);
-      if (!selectedSup && cfg.supervisoras.length > 0) {
-        // Keep current or select first
+    });
+
+    // Si el dispositivo tiene cargas o planes guardados localmente sin sincronizar,
+    // se envían a Supabase de forma transparente en segundo plano
+    api.syncLocalDataToSupabase().then((res) => {
+      if (res && (res.syncedCargas > 0 || res.syncedPlanes > 0)) {
+        showToast(`Se sincronizaron ${res.syncedCargas} cargas locales con la base de datos.`, 'info');
+        loadDayData(selectedFecha);
+        loadMonthData(selectedMonth);
       }
+    }).catch((err) => {
+      console.warn('AutoSync background notice:', err);
     });
   }, []);
 
