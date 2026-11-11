@@ -14,6 +14,7 @@ import {
 import { isUserAdmin, canUserManageStores } from '../lib/auth';
 import { gsap, useGSAP } from '../lib/animations';
 import { UserAvatar } from './UserAvatar';
+import { CustomGlobalGuardSelect } from './CustomGlobalGuardSelect';
 
 export function SupervisorKanbanBoard({ config, onUpdateConfig, currentUser }) {
   const [draggedStoreId, setDraggedStoreId] = useState(null);
@@ -189,27 +190,18 @@ export function SupervisorKanbanBoard({ config, onUpdateConfig, currentUser }) {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 w-full md:w-auto md:min-w-[280px]">
-              <select
+            <div className="w-full md:w-auto md:min-w-[300px]">
+              <CustomGlobalGuardSelect
                 value={config.globalCargaSupervisorId || 'none'}
-                onChange={(e) => {
-                  const val = e.target.value;
+                onChange={(val) => {
                   onUpdateConfig({
                     ...config,
                     globalCargaSupervisorId: val,
                   });
                 }}
-                className="w-full bg-slate-950 border border-amber-500/40 hover:border-amber-500 focus:border-amber-400 text-white font-bold text-xs sm:text-sm rounded-xl px-3 py-2.5 focus:outline-none shadow-inner cursor-pointer"
-              >
-                <option value="none">🚫 Ninguno (Solo Administradores)</option>
-                <option value="__all">🌟 Todos los supervisores habilitados</option>
-                <option disabled>──────────────</option>
-                {supervisoras.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    👤 {s.name} ({tiendas.filter((t) => t.sup === s.id).length} locales)
-                  </option>
-                ))}
-              </select>
+                supervisoras={supervisoras}
+                tiendas={tiendas}
+              />
             </div>
           </div>
         </div>

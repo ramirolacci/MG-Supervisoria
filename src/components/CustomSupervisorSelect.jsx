@@ -137,7 +137,7 @@ export function CustomSupervisorSelect({
       {isOpen && (
         <div
           ref={popoverRef}
-          className="absolute top-full left-0 mt-2 z-50 w-[calc(200%+8px)] sm:w-full min-w-[310px] sm:min-w-0 max-w-[calc(100vw-28px)] bg-slate-900/95 border border-slate-700/80 rounded-2xl p-2 shadow-2xl shadow-black/90 backdrop-blur-xl origin-top max-h-80 overflow-y-auto"
+          className="absolute top-full left-0 mt-2 z-50 w-[calc(200%+8px)] sm:w-full min-w-[310px] sm:min-w-0 max-w-[calc(100vw-28px)] bg-slate-900/95 border border-slate-700/80 rounded-2xl p-2 shadow-2xl shadow-black/90 backdrop-blur-xl origin-top max-h-80 overflow-y-auto no-scrollbar"
         >
           {/* Option: Todas las tiendas */}
           <button

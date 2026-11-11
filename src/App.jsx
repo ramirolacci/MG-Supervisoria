@@ -15,11 +15,12 @@ import { ChangePasswordModal } from './components/ChangePasswordModal';
 import { CustomDatePicker } from './components/CustomDatePicker';
 import { CustomMonthPicker } from './components/CustomMonthPicker';
 import { CustomSupervisorSelect } from './components/CustomSupervisorSelect';
+import { CustomGlobalGuardSelect } from './components/CustomGlobalGuardSelect';
 import { Footer } from './components/Footer';
 import { UserAvatar } from './components/UserAvatar';
 import { ExcelImportModal } from './components/ExcelImportModal';
 import { api } from './lib/api';
-import { getSupabaseCredentials } from './lib/supabase';
+import { getSupabaseCredentials, getSupabase } from './lib/supabase';
 import { getStoredSession, clearSession, isUserAdmin, canUserAccessHistory } from './lib/auth';
 import { exportRankingPDF, exportRangeReportPDF } from './lib/pdfExport';
 import {
@@ -246,6 +247,64 @@ export default function App() {
     }).catch((err) => {
       console.warn('AutoSync background notice:', err);
     });
+
+    // Escucha en tiempo real de cambios en la configuración (Guardia de Carga Global)
+    const supabase = getSupabase();
+    let channel = null;
+
+    if (supabase) {
+      try {
+        channel = supabase
+          .channel('mg_config_realtime')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'mg_config', filter: 'id=eq.estructura' },
+            (payload) => {
+              if (payload.new && payload.new.data) {
+                const updatedData = payload.new.data;
+                setConfig((prev) => ({
+                  ...prev,
+                  ...updatedData,
+                  globalCargaSupervisorId: updatedData.globalCargaSupervisorId || 'none',
+                }));
+              }
+            }
+          )
+          .subscribe();
+      } catch (e) {
+        console.warn('Realtime subscription error:', e);
+      }
+    }
+
+    // Sincronización al volver a enfocar la ventana o pestaña
+    const handleFocus = () => {
+      api.getConfig().then((cfg) => {
+        if (cfg) setConfig(cfg);
+      });
+    };
+    window.addEventListener('focus', handleFocus);
+
+    // Respaldo periódico cada 25 segundos
+    const syncInterval = setInterval(() => {
+      api.getConfig().then((cfg) => {
+        if (cfg) {
+          setConfig((prev) => {
+            if (prev.globalCargaSupervisorId !== cfg.globalCargaSupervisorId) {
+              return { ...prev, ...cfg };
+            }
+            return prev;
+          });
+        }
+      });
+    }, 25000);
+
+    return () => {
+      if (supabase && channel) {
+        supabase.removeChannel(channel);
+      }
+      window.removeEventListener('focus', handleFocus);
+      clearInterval(syncInterval);
+    };
   }, []);
 
   // 2. Load Day Data
@@ -1350,8 +1409,8 @@ export default function App() {
           <>
             {/* Hero & Selection Controls */}
         <div className="bg-slate-900/60 border border-slate-800 rounded-2xl sm:rounded-3xl p-3 sm:p-6 shadow-xl mb-4 sm:mb-6">
-          <div className="grid grid-cols-2 gap-2 sm:gap-4">
-            {/* Supervisor Selector */}
+          <div className={`grid gap-2.5 sm:gap-4 ${isUserAdmin(currentUser) ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'}`}>
+            {/* 1. Supervisor Selector */}
             <div className="min-w-0">
               <label className="block text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5 sm:mb-2 flex items-center justify-between truncate">
                 <span className="flex items-center gap-1 sm:gap-1.5 truncate">
@@ -1372,46 +1431,22 @@ export default function App() {
 
               {isUserAdmin(currentUser) ? (
                 /* Admin: Can select any supervisor or all stores */
-                <div className="space-y-2">
-                  <CustomSupervisorSelect
-                    value={selectedSup}
-                    onChange={(newSup) => {
-                      if (dirtyStoreIds.size > 0) {
-                        if (!confirm('Tenés cambios sin guardar. ¿Deseas descartarlos para cambiar de supervisora?')) {
-                          return;
-                        }
-                        setDirtyStoreIds(new Set());
+                <CustomSupervisorSelect
+                  value={selectedSup}
+                  onChange={(newSup) => {
+                    if (dirtyStoreIds.size > 0) {
+                      if (!confirm('Tenés cambios sin guardar. ¿Deseas descartarlos para cambiar de supervisora?')) {
+                        return;
                       }
-                      setSelectedSup(newSup);
-                      localStorage.setItem(LS_SELECTED_SUP, newSup);
-                    }}
-                    supervisoras={config.supervisoras}
-                    tiendas={config.tiendas}
-                    allSupValue={ALL_SUP}
-                  />
-
-                  {/* Acceso Rápido de Administración: Asignar Guardia del Día */}
-                  <div className="flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-950/70 border border-slate-800 text-[11px]">
-                    <span className="text-slate-400 flex items-center gap-1 font-semibold truncate">
-                      <ShieldCheck className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                      <span className="hidden sm:inline">Guardia Carga Global:</span>
-                      <span className="sm:hidden">Guardia:</span>
-                    </span>
-                    <select
-                      value={config.globalCargaSupervisorId || 'none'}
-                      onChange={(e) => handleUpdateGlobalLoader(e.target.value)}
-                      className="bg-slate-900 border border-slate-700 hover:border-amber-500/60 text-amber-300 font-bold text-[11px] rounded-lg px-2 py-0.5 focus:outline-none cursor-pointer max-w-[150px] sm:max-w-none truncate"
-                    >
-                      <option value="none">🚫 Ninguno (Solo Admin)</option>
-                      <option value="__all">🌟 Todos habilitados</option>
-                      {config.supervisoras?.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          👤 {s.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+                      setDirtyStoreIds(new Set());
+                    }
+                    setSelectedSup(newSup);
+                    localStorage.setItem(LS_SELECTED_SUP, newSup);
+                  }}
+                  supervisoras={config.supervisoras}
+                  tiendas={config.tiendas}
+                  allSupValue={ALL_SUP}
+                />
               ) : isGlobalLoader ? (
                 /* Supervisor on duty: Can toggle between their own stores and all stores! */
                 <div className="flex flex-col gap-2">
@@ -1472,7 +1507,29 @@ export default function App() {
               )}
             </div>
 
-            {/* Date Selector */}
+            {/* 2. Guardia Carga Global (Solo Administradores) */}
+            {isUserAdmin(currentUser) && (
+              <div className="min-w-0">
+                <label className="block text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5 sm:mb-2 flex items-center justify-between truncate">
+                  <span className="flex items-center gap-1 sm:gap-1.5 truncate">
+                    <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 shrink-0" />
+                    <span className="truncate">Guardia Carga Global</span>
+                  </span>
+                  <span className="hidden sm:inline text-[10px] text-amber-400 font-bold uppercase tracking-wider bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+                    Control Admin
+                  </span>
+                </label>
+
+                <CustomGlobalGuardSelect
+                  value={config.globalCargaSupervisorId || 'none'}
+                  onChange={handleUpdateGlobalLoader}
+                  supervisoras={config.supervisoras}
+                  tiendas={config.tiendas}
+                />
+              </div>
+            )}
+
+            {/* 3. Date Selector */}
             <div className="min-w-0">
               <label className="block text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5 sm:mb-2 flex items-center gap-1 sm:gap-1.5 truncate">
                 <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 shrink-0" />
