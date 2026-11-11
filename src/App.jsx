@@ -38,7 +38,7 @@ import {
   ymd,
   formatThousands,
 } from './lib/formatters';
-import { Calendar, UserCheck, AlertTriangle, CheckCircle, Copy, FileText, Save, RotateCcw, FileSpreadsheet } from 'lucide-react';
+import { Calendar, UserCheck, AlertTriangle, CheckCircle, Copy, FileText, Save, RotateCcw, FileSpreadsheet, ShieldCheck } from 'lucide-react';
 import { animateTabEnter, animateTabExit, animateToastEnter, gsap } from './lib/animations';
 
 const LS_SELECTED_SUP = 'mg_active_supervisora';
@@ -202,6 +202,32 @@ export default function App() {
 
   // Permiso para ver u operar la pestaña de historial
   const canAccessHistory = canUserAccessHistory(currentUser);
+
+  // Permiso para realizar Carga Global (Admins o Supervisor asignado de guardia)
+  const isGlobalLoader = Boolean(
+    isUserAdmin(currentUser) ||
+    (config?.globalCargaSupervisorId &&
+      (config.globalCargaSupervisorId === '__all' || config.globalCargaSupervisorId === currentUser?.supId))
+  );
+
+  const handleUpdateGlobalLoader = async (newSupId) => {
+    try {
+      const nextConfig = { ...config, globalCargaSupervisorId: newSupId };
+      setConfig(nextConfig);
+      await api.saveConfig(nextConfig);
+      const supObj = config.supervisoras?.find((s) => s.id === newSupId);
+      const label =
+        newSupId === '__all'
+          ? 'Todos los supervisores'
+          : newSupId === 'none' || !newSupId
+          ? 'Ninguno (Solo administradores)'
+          : supObj?.name || newSupId;
+      showToast(`Guardia de carga global asignada a: ${label}`, 'success');
+    } catch (err) {
+      console.error('Error updating global loader:', err);
+      showToast('Error al actualizar permiso de guardia.', 'error');
+    }
+  };
 
   // 1. Initial Load: Config & Auto-Sync de cargas locales offline a Supabase
   useEffect(() => {
@@ -479,6 +505,8 @@ export default function App() {
           comandas: ev.c,
           venta: ev.v,
           unidades: ev.u,
+          cargadoPor: currentUser?.name || 'Administración',
+          cargadoEn: new Date().toISOString(),
         });
       }
     });
@@ -1330,31 +1358,102 @@ export default function App() {
                   <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 shrink-0" />
                   <span className="truncate">Supervisora a Cargo</span>
                 </span>
-                {!isUserAdmin(currentUser) && (
+                {!isUserAdmin(currentUser) && !isGlobalLoader && (
                   <span className="hidden sm:inline text-[10px] text-slate-500 font-bold uppercase tracking-wider">
                     Asignada por sesión
+                  </span>
+                )}
+                {!isUserAdmin(currentUser) && isGlobalLoader && (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 font-black uppercase tracking-wider bg-amber-500/15 px-2 py-0.5 rounded-full border border-amber-500/30 animate-pulse">
+                    ⚡ De Guardia
                   </span>
                 )}
               </label>
 
               {isUserAdmin(currentUser) ? (
                 /* Admin: Can select any supervisor or all stores */
-                <CustomSupervisorSelect
-                  value={selectedSup}
-                  onChange={(newSup) => {
-                    if (dirtyStoreIds.size > 0) {
-                      if (!confirm('Tenés cambios sin guardar. ¿Deseas descartarlos para cambiar de supervisora?')) {
-                        return;
+                <div className="space-y-2">
+                  <CustomSupervisorSelect
+                    value={selectedSup}
+                    onChange={(newSup) => {
+                      if (dirtyStoreIds.size > 0) {
+                        if (!confirm('Tenés cambios sin guardar. ¿Deseas descartarlos para cambiar de supervisora?')) {
+                          return;
+                        }
+                        setDirtyStoreIds(new Set());
                       }
-                      setDirtyStoreIds(new Set());
-                    }
-                    setSelectedSup(newSup);
-                    localStorage.setItem(LS_SELECTED_SUP, newSup);
-                  }}
-                  supervisoras={config.supervisoras}
-                  tiendas={config.tiendas}
-                  allSupValue={ALL_SUP}
-                />
+                      setSelectedSup(newSup);
+                      localStorage.setItem(LS_SELECTED_SUP, newSup);
+                    }}
+                    supervisoras={config.supervisoras}
+                    tiendas={config.tiendas}
+                    allSupValue={ALL_SUP}
+                  />
+
+                  {/* Acceso Rápido de Administración: Asignar Guardia del Día */}
+                  <div className="flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-950/70 border border-slate-800 text-[11px]">
+                    <span className="text-slate-400 flex items-center gap-1 font-semibold truncate">
+                      <ShieldCheck className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span className="hidden sm:inline">Guardia Carga Global:</span>
+                      <span className="sm:hidden">Guardia:</span>
+                    </span>
+                    <select
+                      value={config.globalCargaSupervisorId || 'none'}
+                      onChange={(e) => handleUpdateGlobalLoader(e.target.value)}
+                      className="bg-slate-900 border border-slate-700 hover:border-amber-500/60 text-amber-300 font-bold text-[11px] rounded-lg px-2 py-0.5 focus:outline-none cursor-pointer max-w-[150px] sm:max-w-none truncate"
+                    >
+                      <option value="none">🚫 Ninguno (Solo Admin)</option>
+                      <option value="__all">🌟 Todos habilitados</option>
+                      {config.supervisoras?.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          👤 {s.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              ) : isGlobalLoader ? (
+                /* Supervisor on duty: Can toggle between their own stores and all stores! */
+                <div className="flex flex-col gap-2">
+                  <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-950 border border-amber-500/50 rounded-2xl shadow-inner">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (dirtyStoreIds.size > 0) {
+                          if (!confirm('Tenés cambios sin guardar. ¿Deseas descartarlos para cambiar de vista?')) return;
+                          setDirtyStoreIds(new Set());
+                        }
+                        setSelectedSup(currentUser?.supId || '');
+                        localStorage.setItem(LS_SELECTED_SUP, currentUser?.supId || '');
+                      }}
+                      className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
+                        selectedSup === currentUser?.supId
+                          ? 'bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/20'
+                          : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                      }`}
+                    >
+                      <span>🏢 Mis Locales</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (dirtyStoreIds.size > 0) {
+                          if (!confirm('Tenés cambios sin guardar. ¿Deseas descartarlos para cambiar de vista?')) return;
+                          setDirtyStoreIds(new Set());
+                        }
+                        setSelectedSup(ALL_SUP);
+                        localStorage.setItem(LS_SELECTED_SUP, ALL_SUP);
+                      }}
+                      className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
+                        selectedSup === ALL_SUP
+                          ? 'bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/20'
+                          : 'text-amber-400/80 hover:text-amber-300 hover:bg-amber-500/10'
+                      }`}
+                    >
+                      <span>🌐 Toda la Red ({config.tiendas.length})</span>
+                    </button>
+                  </div>
+                </div>
               ) : (
                 /* Supervisor: Locked strictly to their own account */
                 <div className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl px-2.5 sm:px-4 py-2 sm:py-3 text-white font-bold text-xs sm:text-base shadow-inner flex items-center justify-between">
@@ -1414,6 +1513,25 @@ export default function App() {
               <span>Importar Excel</span>
             </button>
           </div>
+
+          {/* Banner de Guardia para Supervisora Habilitada */}
+          {!isUserAdmin(currentUser) && isGlobalLoader && (
+            <div className="mt-3.5 pt-3 border-t border-amber-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 bg-gradient-to-r from-amber-500/15 via-slate-900/60 to-transparent p-3 rounded-xl border border-amber-500/30">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-black text-white">
+                    Estás habilitado/a para Carga Global
+                  </p>
+                  <p className="text-[11px] text-amber-200/80">
+                    Administración te asignó la guardia de hoy. Podés alternar arriba entre <strong>"Mis Locales"</strong> y <strong>"Toda la Red"</strong> ({config.tiendas.length} sucursales).
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Day Sticky Bar */}

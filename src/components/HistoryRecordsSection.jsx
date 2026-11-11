@@ -1230,12 +1230,19 @@ export function HistoryRecordsSection({
                   </div>
 
                   {/* Barra de Auditoría de Carga / Modificación */}
-                  {(activeRecord.modificadoPor || activeRecord.cargadoEn) && (
+                  {(activeRecord.modificadoPor || activeRecord.cargadoEn || activeRecord.cargadoPor) && (
                     <div className="bg-slate-950/40 border border-slate-800/60 rounded-xl px-3.5 py-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400 font-sans">
-                      <div className="flex items-center gap-1.5">
-                        <Info className="w-3.5 h-3.5 text-slate-500" />
-                        {activeRecord.modificadoPor ? (
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <Info className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        {activeRecord.cargadoPor ? (
                           <span>
+                            Cargado por <strong className="text-amber-300 font-bold">{activeRecord.cargadoPor}</strong>
+                          </span>
+                        ) : (
+                          <span>Carga original registrada en sistema</span>
+                        )}
+                        {activeRecord.modificadoPor && (
+                          <span className={activeRecord.cargadoPor ? 'before:content-["•"] before:mx-1.5 before:text-slate-600' : ''}>
                             Última edición por <strong className="text-amber-300">{activeRecord.modificadoPor}</strong>
                             {activeRecord.modificadoEn && (
                               <span className="text-slate-500 ml-1">
@@ -1243,14 +1250,12 @@ export function HistoryRecordsSection({
                               </span>
                             )}
                           </span>
-                        ) : (
-                          <span>Carga original registrada en sistema</span>
                         )}
                       </div>
 
                       {activeRecord.cargadoEn && (
                         <span className="text-slate-500 text-[10px]">
-                          Creado: {new Date(activeRecord.cargadoEn).toLocaleDateString('es-AR')}
+                          Creado: {new Date(activeRecord.cargadoEn).toLocaleDateString('es-AR')} {new Date(activeRecord.cargadoEn).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       )}
                     </div>

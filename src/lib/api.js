@@ -6,6 +6,7 @@ const LS_CARGAS_KEY = 'mg_local_cargas';
 // Default initial dataset with standard Mi Gusto structure
 // Default initial dataset with exact Mi Gusto structure from operational team
 export const INITIAL_CONFIG = {
+  globalCargaSupervisorId: 'none',
   supervisoras: [
     {
       id: 'sup_damaris',
@@ -105,7 +106,11 @@ export const api = {
           .eq('id', 'estructura')
           .single();
         if (data && data.data) {
-          return data.data;
+          return {
+            ...INITIAL_CONFIG,
+            ...data.data,
+            globalCargaSupervisorId: data.data.globalCargaSupervisorId || 'none',
+          };
         }
         if (error && error.code !== 'PGRST116') {
           console.warn('Error fetching config from Supabase, falling back to local:', error);
@@ -118,7 +123,12 @@ export const api = {
     const local = localStorage.getItem(LS_CONFIG_KEY);
     if (local) {
       try {
-        return JSON.parse(local);
+        const parsed = JSON.parse(local);
+        return {
+          ...INITIAL_CONFIG,
+          ...parsed,
+          globalCargaSupervisorId: parsed.globalCargaSupervisorId || 'none',
+        };
       } catch (e) {}
     }
 

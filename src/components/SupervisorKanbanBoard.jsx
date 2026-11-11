@@ -166,6 +166,55 @@ export function SupervisorKanbanBoard({ config, onUpdateConfig, currentUser }) {
         </div>
       </div>
 
+      {/* Panel de Asignación de Guardia Operativa (Solo Administradores) */}
+      {isAdmin && (
+        <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-slate-900/80 to-purple-500/10 border border-amber-500/30 shadow-lg">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0 shadow-sm">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm sm:text-base font-extrabold text-white">
+                    Guardia Operativa · Permiso de Carga Global
+                  </h4>
+                  <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
+                    Control Admin
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Asigná qué supervisora está autorizada hoy para cargar y guardar todas las sucursales de la red.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 w-full md:w-auto md:min-w-[280px]">
+              <select
+                value={config.globalCargaSupervisorId || 'none'}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  onUpdateConfig({
+                    ...config,
+                    globalCargaSupervisorId: val,
+                  });
+                }}
+                className="w-full bg-slate-950 border border-amber-500/40 hover:border-amber-500 focus:border-amber-400 text-white font-bold text-xs sm:text-sm rounded-xl px-3 py-2.5 focus:outline-none shadow-inner cursor-pointer"
+              >
+                <option value="none">🚫 Ninguno (Solo Administradores)</option>
+                <option value="__all">🌟 Todos los supervisores habilitados</option>
+                <option disabled>──────────────</option>
+                {supervisoras.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    👤 {s.name} ({tiendas.filter((t) => t.sup === s.id).length} locales)
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Helper to render a column */}
       {(() => {
         const renderColumn = (col, isCompact = false) => {
@@ -216,6 +265,11 @@ export function SupervisorKanbanBoard({ config, onUpdateConfig, currentUser }) {
                     <p className="text-[10px] sm:text-[11px] text-slate-400 truncate mt-0.5">
                       {col.title}
                     </p>
+                    {(col.id === config.globalCargaSupervisorId || config.globalCargaSupervisorId === '__all') && (
+                      <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-amber-300 bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 rounded-md mt-1 shadow-sm">
+                        ⚡ Carga Global
+                      </span>
+                    )}
                   </div>
                 </div>
 
