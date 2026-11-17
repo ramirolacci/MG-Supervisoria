@@ -72,6 +72,12 @@ const pctV = (a, b) => {
   return ((a - b) / b) * 100;
 };
 
+// Formateador estándar argentino para porcentajes (coma decimal: ej. -5,5% o +12,3%)
+const fmtPct = (p) => {
+  if (p == null) return '–';
+  return DEC.format(Math.abs(p));
+};
+
 const MET_L = {
   v: 'Venta',
   c: 'Comandas',
@@ -516,7 +522,10 @@ export function MonthComparisonDashboard({
                     isMoney: kpi.isMoney,
                   })}`}
                 >
-                  <AnimatedNumber value={a} isMoney={kpi.isMoney} />
+                  <AnimatedNumber
+                    value={a}
+                    formatter={(v) => (kpi.isMoney ? ARS.format(v) : INT.format(v))}
+                  />
                 </div>
               </div>
 
@@ -536,7 +545,7 @@ export function MonthComparisonDashboard({
                       }`}
                     >
                       {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                      {isPositive ? '+' : ''}{p.toFixed(1)}%
+                      {isPositive ? '+' : '-'}{fmtPct(p)}%
                     </span>
                   ) : (
                     <span className="text-slate-500">–</span>
@@ -759,7 +768,7 @@ export function MonthComparisonDashboard({
                               : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                           }`}
                         >
-                          {isPos ? '▲ +' : '▼ '}{p.toFixed(1)}%
+                          {isPos ? '▲ +' : '▼ -'}{fmtPct(p)}%
                         </span>
                       ) : (
                         '–'
@@ -804,7 +813,7 @@ export function MonthComparisonDashboard({
                             : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                         }`}
                       >
-                        {isPos ? '▲ +' : '▼ '}{pTot.toFixed(1)}%
+                        {isPos ? '▲ +' : '▼ -'}{fmtPct(pTot)}%
                       </span>
                     );
                   })()}
@@ -904,7 +913,7 @@ export function MonthComparisonDashboard({
                               : 'bg-rose-500/10 text-rose-400'
                           }`}
                         >
-                          {isPos ? '▲ +' : '▼ '}{p.toFixed(1)}%
+                          {isPos ? '▲ +' : '▼ -'}{fmtPct(p)}%
                         </span>
                       ) : (
                         '–'
@@ -974,7 +983,7 @@ export function MonthComparisonDashboard({
                                 : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                             }`}
                           >
-                            {isPos ? '▲ +' : '▼ '}{s.p.toFixed(1)}%
+                            {isPos ? '▲ +' : '▼ -'}{fmtPct(s.p)}%
                           </span>
                         ) : (
                           '–'
