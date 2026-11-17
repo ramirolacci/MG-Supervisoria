@@ -7,6 +7,7 @@ import { StoreRow } from './components/StoreRow';
 import { DaySummaryBar } from './components/DaySummaryBar';
 import { DayRankTable } from './components/DayRankTable';
 import { MonthlyDashboard } from './components/MonthlyDashboard';
+import { MonthComparisonDashboard } from './components/MonthComparisonDashboard';
 import { SupervisorKanbanBoard } from './components/SupervisorKanbanBoard';
 import { HistoryRecordsSection } from './components/HistoryRecordsSection';
 import { PlanificacionSupervisoras } from './components/PlanificacionSupervisoras';
@@ -128,7 +129,7 @@ export default function App() {
 
   // UI state
   const [activeTab, setActiveTab] = useState('carga'); // 'carga' | 'ranking' | 'kanban' | 'historial'
-  const [rankingView, setRankingView] = useState('mes'); // 'mes' | 'dia'
+  const [rankingView, setRankingView] = useState('mes'); // 'mes' | 'dia' | 'rango' | 'comparativo'
   const [dayRankMetric, setDayRankMetric] = useState('v');
   const [isSaving, setIsSaving] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
@@ -1242,6 +1243,8 @@ export default function App() {
                       ? '🏆 Ranking del Día'
                       : rankingView === 'mes'
                       ? '📅 Métricas del Mes'
+                      : rankingView === 'comparativo'
+                      ? '🔄 Comparativo Mes vs Anterior'
                       : '📊 Reporte por Rango de Fechas'}
                   </span>
                 </h3>
@@ -1250,22 +1253,24 @@ export default function App() {
                     ? `Posiciones y rendimiento del día (${fmtDayLong(selectedFecha)})`
                     : rankingView === 'mes'
                     ? 'Acumulado mensual consolidado y detalle de cumplimiento'
+                    : rankingView === 'comparativo'
+                    ? `Mismos días comparables semana a semana desde el 1.er lunes · ${activeSupName}`
                     : `Análisis consolidado del ${rangeStartDate} al ${rangeEndDate} · ${activeSupName}`}
                 </p>
               </div>
 
               <div
                 className={`w-full sm:w-auto flex gap-2 sm:gap-3 ${
-                  rankingView === 'rango'
+                  rankingView === 'rango' || rankingView === 'comparativo'
                     ? 'flex-col sm:flex-row items-stretch sm:items-center'
                     : 'flex-row items-center justify-between sm:justify-start'
                 }`}
               >
-                {/* Switch Día / Mes / Rango */}
+                {/* Switch Día / Mes / Comparativo / Rango */}
                 <div
                   className={`p-1 sm:p-1.5 bg-slate-950 rounded-2xl border border-slate-800 shadow-inner ${
-                    rankingView === 'rango'
-                      ? 'w-full sm:w-auto grid grid-cols-3 sm:flex'
+                    rankingView === 'rango' || rankingView === 'comparativo'
+                      ? 'w-full sm:w-auto grid grid-cols-2 sm:flex'
                       : 'flex w-fit'
                   }`}
                 >
@@ -1273,7 +1278,7 @@ export default function App() {
                     type="button"
                     onClick={() => handleRankingViewChange('dia')}
                     className={`py-2 rounded-xl text-xs sm:text-sm font-black transition active:scale-95 cursor-pointer text-center ${
-                      rankingView === 'rango'
+                      rankingView === 'rango' || rankingView === 'comparativo'
                         ? 'w-full sm:w-auto px-2 sm:px-4'
                         : 'px-3.5 sm:px-4'
                     } ${
@@ -1288,7 +1293,7 @@ export default function App() {
                     type="button"
                     onClick={() => handleRankingViewChange('mes')}
                     className={`py-2 rounded-xl text-xs sm:text-sm font-black transition active:scale-95 cursor-pointer text-center ${
-                      rankingView === 'rango'
+                      rankingView === 'rango' || rankingView === 'comparativo'
                         ? 'w-full sm:w-auto px-2 sm:px-4'
                         : 'px-3.5 sm:px-4'
                     } ${
@@ -1301,9 +1306,25 @@ export default function App() {
                   </button>
                   <button
                     type="button"
+                    onClick={() => handleRankingViewChange('comparativo')}
+                    className={`py-2 rounded-xl text-xs sm:text-sm font-black transition active:scale-95 cursor-pointer text-center ${
+                      rankingView === 'rango' || rankingView === 'comparativo'
+                        ? 'w-full sm:w-auto px-2 sm:px-4'
+                        : 'px-3.5 sm:px-4'
+                    } ${
+                      rankingView === 'comparativo'
+                        ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/25 scale-[1.02]'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
+                    }`}
+                    title="Comparativa mes actual contra mes anterior por semanas relativas"
+                  >
+                    vs Mes Anterior
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => handleRankingViewChange('rango')}
                     className={`py-2 rounded-xl text-xs sm:text-sm font-black transition active:scale-95 cursor-pointer text-center ${
-                      rankingView === 'rango'
+                      rankingView === 'rango' || rankingView === 'comparativo'
                         ? 'w-full sm:w-auto px-2 sm:px-4'
                         : 'px-3.5 sm:px-4'
                     } ${
@@ -1319,21 +1340,23 @@ export default function App() {
                 {/* Contenedor de Botones de Exportar */}
                 <div
                   className={`flex items-center gap-2 ${
-                    rankingView === 'rango' ? 'w-full sm:w-auto' : 'w-auto'
+                    rankingView === 'rango' || rankingView === 'comparativo' ? 'w-full sm:w-auto' : 'w-auto'
                   }`}
                 >
                   {/* Botón Exportar PDF de Ranking / Métricas / Rango */}
-                  <button
-                    type="button"
-                    onClick={handleExportRankingPdf}
-                    className={`flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-lg shadow-rose-600/25 active:scale-95 cursor-pointer whitespace-nowrap ${
-                      rankingView === 'rango' ? 'flex-1 sm:flex-initial' : 'flex-initial'
-                    }`}
-                    title="Descargar informe ejecutivo en PDF de ranking o métricas"
-                  >
-                    <FileText className="w-4 h-4 shrink-0" />
-                    <span>Exportar PDF</span>
-                  </button>
+                  {rankingView !== 'comparativo' && (
+                    <button
+                      type="button"
+                      onClick={handleExportRankingPdf}
+                      className={`flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-lg shadow-rose-600/25 active:scale-95 cursor-pointer whitespace-nowrap ${
+                        rankingView === 'rango' ? 'flex-1 sm:flex-initial' : 'flex-initial'
+                      }`}
+                      title="Descargar informe ejecutivo en PDF de ranking o métricas"
+                    >
+                      <FileText className="w-4 h-4 shrink-0" />
+                      <span>Exportar PDF</span>
+                    </button>
+                  )}
 
                   {/* Botón Exportar CSV cuando esté en Rango */}
                   {rankingView === 'rango' && (
@@ -1351,7 +1374,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Content: Day Ranking OR Monthly Dashboard OR Range Report Dashboard with smooth transitions */}
+            {/* Content: Day Ranking OR Monthly Dashboard OR Month Comparison Dashboard OR Range Report Dashboard with smooth transitions */}
             <div ref={rankingContentRef}>
               {activeStores.length > 0 ? (
                 rankingView === 'dia' ? (
@@ -1372,6 +1395,21 @@ export default function App() {
                     isAllSupervisors={selectedSup === ALL_SUP}
                     onExportMonthPdf={handleExportRankingPdf}
                     onExportMonthCsv={handleExportMonthCsv}
+                  />
+                ) : rankingView === 'comparativo' ? (
+                  <MonthComparisonDashboard
+                    month={selectedMonth}
+                    onMonthChange={setSelectedMonth}
+                    tiendas={config.tiendas}
+                    supervisoras={config.supervisoras}
+                    selectedSup={selectedSup}
+                    onSelectSup={(supId) => {
+                      setSelectedSup(supId);
+                      localStorage.setItem(LS_SELECTED_SUP, supId);
+                    }}
+                    currentUser={currentUser}
+                    isAdmin={isUserAdmin(currentUser)}
+                    showToast={showToast}
                   />
                 ) : (
                   <RangeReportDashboard
