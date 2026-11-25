@@ -79,7 +79,7 @@ export function ChangePasswordModal({ currentUser, isOpen, onClose }) {
   return (
     <div
       ref={backdropRef}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/45 backdrop-blur-sm"
     >
       <div
         ref={modalRef}

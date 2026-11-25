@@ -7,6 +7,8 @@ export function CustomStoreSelect({
   onChange,
   tiendas = [],
   allOptionLabel = 'Todas las tiendas',
+  includeAllOption = true,
+  placeholder = 'Seleccionar tienda',
   className = '',
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,7 +20,7 @@ export function CustomStoreSelect({
   }, [tiendas]);
 
   const currentStore = sortedTiendas.find((t) => String(t.id) === String(value));
-  const isAll = !value || value === '';
+  const isAll = includeAllOption && (!value || value === '');
 
   const closeDropdown = () => {
     if (popoverRef.current) {
@@ -69,14 +71,14 @@ export function CustomStoreSelect({
             openDropdown();
           }
         }}
-        className="w-full bg-slate-950 border border-slate-800 hover:border-amber-500/50 text-white font-bold flex items-center justify-between transition-all duration-200 shadow-inner group cursor-pointer focus:outline-none focus:border-amber-500/80 rounded-xl px-2.5 sm:px-3 py-2 text-xs sm:text-sm gap-2"
+        className="w-full bg-slate-900 border border-slate-700 hover:border-amber-400 focus:border-amber-400 text-white font-bold flex items-center justify-between transition-all duration-200 shadow-inner group cursor-pointer focus:outline-none rounded-xl px-2.5 sm:px-3 py-2 text-xs gap-2"
       >
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
           <div className="rounded-lg bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center justify-center shadow-sm shrink-0 w-5 h-5 sm:w-6 sm:h-6 text-[10px] sm:text-xs">
             {isAll ? <Sparkles className="w-3 h-3 text-amber-400" /> : <Store className="w-3 h-3 text-amber-400" />}
           </div>
-          <span className="truncate text-white font-extrabold group-hover:text-amber-300 transition-colors text-xs sm:text-sm">
-            {isAll ? allOptionLabel : currentStore?.name || 'Seleccionar tienda'}
+          <span className="truncate text-white font-extrabold group-hover:text-amber-300 transition-colors text-xs">
+            {isAll ? allOptionLabel : currentStore?.name || placeholder}
           </span>
         </div>
 
@@ -95,27 +97,31 @@ export function CustomStoreSelect({
           ref={popoverRef}
           className="absolute top-full left-0 mt-2 z-50 w-full min-w-[230px] max-w-[calc(100vw-28px)] bg-slate-900/95 border border-slate-700/80 rounded-2xl p-1.5 sm:p-2 shadow-2xl shadow-black/90 backdrop-blur-xl origin-top max-h-72 overflow-y-auto no-scrollbar"
         >
-          {/* Opción Todas las tiendas */}
-          <button
-            type="button"
-            onClick={() => handleSelect('')}
-            className={`w-full flex items-center justify-between p-2 rounded-xl transition text-left cursor-pointer mb-1 ${
-              isAll
-                ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300 shadow-sm'
-                : 'hover:bg-slate-800/80 text-slate-200 hover:text-white border border-transparent'
-            }`}
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-5 h-5 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
-                <Sparkles className="w-3 h-3 text-amber-400" />
-              </div>
-              <span className="font-extrabold text-xs sm:text-sm truncate">{allOptionLabel}</span>
-            </div>
-            {isAll && <Check className="w-4 h-4 text-amber-400 shrink-0" />}
-          </button>
+          {/* Opción Todas las tiendas (si está habilitada) */}
+          {includeAllOption && (
+            <>
+              <button
+                type="button"
+                onClick={() => handleSelect('')}
+                className={`w-full flex items-center justify-between p-2 rounded-xl transition text-left cursor-pointer mb-1 ${
+                  isAll
+                    ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300 shadow-sm'
+                    : 'hover:bg-slate-800/80 text-slate-200 hover:text-white border border-transparent'
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-5 h-5 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
+                    <Sparkles className="w-3 h-3 text-amber-400" />
+                  </div>
+                  <span className="font-extrabold text-xs sm:text-sm truncate">{allOptionLabel}</span>
+                </div>
+                {isAll && <Check className="w-4 h-4 text-amber-400 shrink-0" />}
+              </button>
 
-          {/* Separador sutil */}
-          <div className="h-px bg-slate-800 my-1 mx-1" />
+              {/* Separador sutil */}
+              <div className="h-px bg-slate-800 my-1 mx-1" />
+            </>
+          )}
 
           {/* Listado de Tiendas */}
           <div className="space-y-0.5">
@@ -136,7 +142,7 @@ export function CustomStoreSelect({
                     <div className="w-5 h-5 rounded-lg bg-slate-800 flex items-center justify-center shrink-0 text-slate-400">
                       <Store className="w-3 h-3 text-slate-400" />
                     </div>
-                    <span className="font-bold text-xs sm:text-sm truncate">{t.name}</span>
+                    <span className="font-bold text-xs truncate">{t.name}</span>
                   </div>
                   {isSelected && <Check className="w-4 h-4 text-amber-400 shrink-0" />}
                 </button>

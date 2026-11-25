@@ -32,6 +32,7 @@ import { ARS, INT, DEC, parseYmd, pad, parseCount, parseMoney, formatMoneyInput,
 import { exportHistoryPDF } from '../lib/pdfExport';
 import { canUserDeleteRecords, canUserEditRecords } from '../lib/auth';
 import { CustomDatePicker } from './CustomDatePicker';
+import { CustomStoreSelect } from './CustomStoreSelect';
 import { AnimatedNumber } from './AnimatedNumber';
 import { UserAvatar } from './UserAvatar';
 import { animateModalEnter, animateModalExit, animatePopoverEnter, animatePopoverExit, gsap, useGSAP } from '../lib/animations';
@@ -117,7 +118,7 @@ function HistorySupervisorFilter({ value, onChange, supervisoras }) {
       {isOpen && (
         <div
           ref={popoverRef}
-          className="absolute top-full left-0 sm:left-auto sm:right-0 mt-2 z-50 min-w-[220px] max-w-[calc(100vw-32px)] bg-slate-900/95 border border-slate-700/80 rounded-2xl p-2 shadow-2xl backdrop-blur-xl origin-top max-h-72 overflow-y-auto"
+          className="absolute top-full left-0 sm:left-auto sm:right-0 mt-2 z-50 min-w-[220px] max-w-[calc(100vw-32px)] bg-slate-900/95 border border-slate-700/80 rounded-2xl p-2 shadow-2xl backdrop-blur-xl origin-top max-h-72 overflow-y-auto no-scrollbar"
         >
           {/* Todas las supervisoras */}
           <button
@@ -248,7 +249,7 @@ function HistoryMonthFilter({ value, onChange, availableMonths }) {
       {isOpen && (
         <div
           ref={popoverRef}
-          className="absolute top-full right-0 mt-2 z-50 min-w-[200px] max-w-[calc(100vw-32px)] bg-slate-900/95 border border-slate-700/80 rounded-2xl p-2 shadow-2xl backdrop-blur-xl origin-top max-h-72 overflow-y-auto font-mono-numbers"
+          className="absolute top-full right-0 mt-2 z-50 min-w-[200px] max-w-[calc(100vw-32px)] bg-slate-900/95 border border-slate-700/80 rounded-2xl p-2 shadow-2xl backdrop-blur-xl origin-top max-h-72 overflow-y-auto font-mono-numbers no-scrollbar"
         >
           {/* Todos los meses */}
           <button
@@ -293,6 +294,163 @@ function HistoryMonthFilter({ value, onChange, availableMonths }) {
               </button>
             );
           })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RecordSupervisorSelect({ value, onChange, supervisoras = [] }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+  const popoverRef = useRef(null);
+
+  const selectedSup = supervisoras.find((s) => s.id === value);
+  const isTester = value === 'sup_tester';
+  const isNone = !value || value === '';
+
+  const closeDropdown = () => {
+    if (popoverRef.current) {
+      animatePopoverExit(popoverRef.current, () => setIsOpen(false));
+    } else {
+      setIsOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && popoverRef.current) {
+      animatePopoverEnter(popoverRef.current);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        closeDropdown();
+      }
+    }
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  const handleSelect = (id) => {
+    onChange(id);
+    closeDropdown();
+  };
+
+  return (
+    <div className="relative w-full" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => (isOpen ? closeDropdown() : setIsOpen(true))}
+        className="w-full bg-slate-900 border border-slate-700 hover:border-purple-400 focus:border-purple-400 text-white font-bold flex items-center justify-between rounded-xl px-2.5 sm:px-3 py-2 text-xs transition cursor-pointer gap-2"
+      >
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+          {isNone ? (
+            <div className="w-5 h-5 rounded-lg bg-slate-800 text-slate-400 border border-slate-700 flex items-center justify-center shrink-0 text-[10px]">
+              <User className="w-3 h-3 text-slate-400" />
+            </div>
+          ) : isTester ? (
+            <div className="w-5 h-5 rounded-lg bg-purple-500/15 text-purple-400 border border-purple-500/30 flex items-center justify-center shrink-0 text-[10px] font-black">
+              T
+            </div>
+          ) : (
+            <UserAvatar
+              user={selectedSup}
+              name={selectedSup?.name}
+              avatarColor={selectedSup?.avatarColor}
+              className="w-5 h-5 rounded-lg shrink-0"
+              textClassName="text-[10px] font-extrabold text-white"
+            />
+          )}
+          <span className="truncate text-white font-bold text-xs">
+            {isNone ? 'Sin supervisora asignada' : isTester ? 'TESTER' : selectedSup?.name || 'Supervisora'}
+          </span>
+        </div>
+        <ChevronDown
+          className={`w-3.5 h-3.5 text-slate-400 group-hover:text-purple-400 transition-transform duration-200 shrink-0 ${
+            isOpen ? 'rotate-180 text-purple-400' : ''
+          }`}
+        />
+      </button>
+
+      {isOpen && (
+        <div
+          ref={popoverRef}
+          className="absolute top-full left-0 mt-2 z-50 w-full min-w-[230px] max-w-[calc(100vw-28px)] bg-slate-900/95 border border-slate-700/80 rounded-2xl p-1.5 sm:p-2 shadow-2xl backdrop-blur-xl origin-top max-h-72 overflow-y-auto no-scrollbar"
+        >
+          {/* Opción: Sin supervisora */}
+          <button
+            type="button"
+            onClick={() => handleSelect('')}
+            className={`w-full flex items-center justify-between p-2 rounded-xl transition text-left cursor-pointer mb-1 ${
+              isNone
+                ? 'bg-purple-500/20 border border-purple-500/40 text-purple-300 shadow-sm'
+                : 'hover:bg-slate-800/80 text-slate-300 hover:text-white border border-transparent'
+            }`}
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-5 h-5 rounded-lg bg-slate-800 flex items-center justify-center shrink-0 text-slate-400">
+                <User className="w-3 h-3" />
+              </div>
+              <span className="font-bold text-xs truncate">Sin supervisora asignada</span>
+            </div>
+            {isNone && <Check className="w-4 h-4 text-purple-400 shrink-0" />}
+          </button>
+
+          {/* Opción TESTER */}
+          <button
+            type="button"
+            onClick={() => handleSelect('sup_tester')}
+            className={`w-full flex items-center justify-between p-2 rounded-xl transition text-left cursor-pointer mb-1 ${
+              isTester
+                ? 'bg-purple-500/20 border border-purple-500/40 text-purple-300 shadow-sm'
+                : 'hover:bg-slate-800/80 text-slate-300 hover:text-white border border-transparent'
+            }`}
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-5 h-5 rounded-lg bg-purple-500/15 flex items-center justify-center shrink-0 text-purple-400 font-black text-[10px]">
+                T
+              </div>
+              <span className="font-bold text-xs truncate">TESTER</span>
+            </div>
+            {isTester && <Check className="w-4 h-4 text-purple-400 shrink-0" />}
+          </button>
+
+          <div className="h-px bg-slate-800 my-1 mx-1" />
+
+          {/* Listado de supervisoras */}
+          <div className="space-y-0.5">
+            {supervisoras.map((s) => {
+              const isSelected = value === s.id;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => handleSelect(s.id)}
+                  className={`w-full flex items-center justify-between p-2 rounded-xl transition text-left cursor-pointer ${
+                    isSelected
+                      ? 'bg-purple-500/20 border border-purple-500/40 text-purple-300 shadow-sm'
+                      : 'hover:bg-slate-800/80 text-slate-300 hover:text-white border border-transparent'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <UserAvatar
+                      user={s}
+                      name={s.name}
+                      avatarColor={s.avatarColor}
+                      className="w-5 h-5 rounded-lg shrink-0"
+                      textClassName="text-[10px] font-extrabold text-white"
+                    />
+                    <span className="font-bold text-xs truncate">{s.name}</span>
+                  </div>
+                  {isSelected && <Check className="w-4 h-4 text-purple-400 shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
@@ -980,7 +1138,7 @@ export function HistoryRecordsSection({
       {activeRecord && (
         <div
           ref={modalBackdropRef}
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/45 backdrop-blur-sm"
         >
           <div
             ref={modalContentRef}
@@ -1021,7 +1179,7 @@ export function HistoryRecordsSection({
             </div>
 
             {/* Contenido del Modal con Métricas, Formulario de Edición y Gráficos */}
-            <div className="p-5 sm:p-6 overflow-y-auto space-y-5 font-mono-numbers">
+            <div className="p-5 sm:p-6 overflow-y-auto no-scrollbar space-y-5 font-mono-numbers">
               {/* Alerta de error si falla validación o guardado */}
               {editError && (
                 <div className="p-3 rounded-xl bg-rose-950/50 border border-rose-800/80 text-rose-300 text-xs flex items-center gap-2 font-sans animate-shake">
@@ -1047,49 +1205,38 @@ export function HistoryRecordsSection({
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 font-sans">
                     {/* Sucursal */}
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                        <Store className="w-3.5 h-3.5 text-amber-400" />
+                      <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5 whitespace-nowrap">
+                        <Store className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                         <span>Sucursal</span>
                       </label>
-                      <select
+                      <CustomStoreSelect
                         value={editValues.tiendaId}
-                        onChange={(e) => setEditValues((prev) => ({ ...prev, tiendaId: e.target.value }))}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold text-xs focus:border-amber-400 focus:outline-none"
-                      >
-                        {(tiendas || []).map((t) => (
-                          <option key={t.id} value={t.id}>
-                            {t.name}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(val) => setEditValues((prev) => ({ ...prev, tiendaId: val }))}
+                        tiendas={tiendas || []}
+                        includeAllOption={false}
+                        placeholder="Seleccionar sucursal"
+                        className="w-full"
+                      />
                     </div>
 
                     {/* Supervisora */}
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                        <User className="w-3.5 h-3.5 text-purple-400" />
+                      <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5 whitespace-nowrap">
+                        <User className="w-3.5 h-3.5 text-purple-400 shrink-0" />
                         <span>Supervisora</span>
                       </label>
-                      <select
+                      <RecordSupervisorSelect
                         value={editValues.supervisoraId}
-                        onChange={(e) => setEditValues((prev) => ({ ...prev, supervisoraId: e.target.value }))}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold text-xs focus:border-purple-400 focus:outline-none"
-                      >
-                        <option value="">Sin supervisora asignada</option>
-                        <option value="sup_tester">TESTER</option>
-                        {(supervisoras || []).map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.name}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(val) => setEditValues((prev) => ({ ...prev, supervisoraId: val }))}
+                        supervisoras={supervisoras || []}
+                      />
                     </div>
 
                     {/* Fecha */}
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-sky-400" />
-                        <span>Fecha del Registro (Día/Mes/Año)</span>
+                      <label className="block text-[10.5px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-tight mb-1 flex items-center gap-1.5 whitespace-nowrap overflow-visible">
+                        <Calendar className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                        <span className="whitespace-nowrap">Fecha del registro (día/mes/año)</span>
                       </label>
                       <CustomDatePicker
                         value={editValues.fecha}
@@ -1390,9 +1537,9 @@ export function HistoryRecordsSection({
                     onClick={() => {
                       setConfirmDeleteRecord(activeRecord);
                     }}
-                    className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-rose-300 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/70 hover:border-rose-600 hover:text-white transition-all shadow-md shadow-rose-950/30 active:scale-95 cursor-pointer"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-black text-white bg-rose-600 hover:bg-rose-500 shadow-lg shadow-rose-600/30 active:scale-95 cursor-pointer transition-all"
                   >
-                    <Trash2 className="w-4 h-4 text-rose-400" />
+                    <Trash2 className="w-4 h-4 text-white" />
                     <span>Eliminar</span>
                   </button>
                 )}
@@ -1403,17 +1550,9 @@ export function HistoryRecordsSection({
                   <>
                     <button
                       type="button"
-                      onClick={handleCancelEditing}
-                      disabled={isSavingEdit}
-                      className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition cursor-pointer"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="button"
                       onClick={handleSaveEdit}
                       disabled={isSavingEdit}
-                      className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black transition shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer"
+                      className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-black transition shadow-lg shadow-amber-500/25 active:scale-95 disabled:opacity-50 cursor-pointer"
                     >
                       {isSavingEdit ? (
                         <>
@@ -1427,6 +1566,14 @@ export function HistoryRecordsSection({
                         </>
                       )}
                     </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelEditing}
+                      disabled={isSavingEdit}
+                      className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-bold transition active:scale-95 cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
                   </>
                 ) : (
                   <>
@@ -1434,9 +1581,9 @@ export function HistoryRecordsSection({
                       <button
                         type="button"
                         onClick={handleStartEditing}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold transition active:scale-95 cursor-pointer"
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-black shadow-lg shadow-amber-500/25 active:scale-95 cursor-pointer transition-all"
                       >
-                        <Edit3 className="w-3.5 h-3.5" />
+                        <Edit3 className="w-3.5 h-3.5 text-slate-950" />
                         <span>Modificar</span>
                       </button>
                     )}
@@ -1457,7 +1604,7 @@ export function HistoryRecordsSection({
 
       {/* Modal de Confirmación de Borrado */}
       {confirmDeleteRecord && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/45 backdrop-blur-sm animate-in fade-in duration-150">
           <div className="bg-slate-900 border border-rose-900/40 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6 space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
