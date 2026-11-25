@@ -105,7 +105,7 @@ export function LoginScreen({ onLoginSuccess }) {
   return (
     <div
       ref={containerRef}
-      className="min-h-screen bg-slate-950 flex flex-col justify-between items-center relative overflow-hidden"
+      className="min-h-screen bg-transparent flex flex-col justify-between items-center relative overflow-hidden"
     >
       {/* Background glow effects with GSAP subtle breathing */}
       <div
