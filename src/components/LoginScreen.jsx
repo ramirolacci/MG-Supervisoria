@@ -152,7 +152,7 @@ export function LoginScreen({ onLoginSuccess }) {
 
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                Correo Institucional
+                Correo Institucional <span className="text-red-500 font-bold">*</span>
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
@@ -171,7 +171,7 @@ export function LoginScreen({ onLoginSuccess }) {
 
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                Contraseña
+                Contraseña <span className="text-red-500 font-bold">*</span>
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
