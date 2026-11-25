@@ -18,6 +18,22 @@ export function DayRankTable({
         { opacity: 0, x: -10 },
         { opacity: 1, x: 0, duration: 0.35, stagger: 0.025, ease: 'power2.out', clearProps: 'transform' }
       );
+
+      // Animar barras de progreso desde 0% hasta el valor correspondiente
+      const bars = tbodyRef.current.querySelectorAll('.rank-progress-bar');
+      bars.forEach((bar, i) => {
+        const targetWidth = bar.getAttribute('data-width') || '0%';
+        gsap.fromTo(
+          bar,
+          { width: '0%' },
+          {
+            width: targetWidth,
+            duration: 0.8,
+            delay: i * 0.02,
+            ease: 'power2.out',
+          }
+        );
+      });
     }
   }, [metric, rankedList.length]);
 
@@ -154,11 +170,15 @@ export function DayRankTable({
                       )}
                     </div>
                     {item.isLoaded && (
-                      <div className="w-full bg-slate-800/80 rounded-full h-1.5 mt-1.5 overflow-hidden max-w-xs">
+                      <div className="w-full bg-slate-800/80 rounded-full h-1.5 mt-1.5 overflow-hidden max-w-xs relative">
                         <div
-                          className="bg-gradient-to-r from-amber-500 to-orange-500 h-full rounded-full transition-all duration-500"
+                          className="rank-progress-bar bg-gradient-to-r from-amber-500 via-orange-500 to-amber-400 h-full rounded-full relative overflow-hidden"
+                          data-width={`${barWidth}%`}
                           style={{ width: `${barWidth}%` }}
-                        />
+                        >
+                          {/* Brillo en movimiento que simula la carga activa */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent w-full h-full -translate-x-full animate-charge-shimmer pointer-events-none" />
+                        </div>
                       </div>
                     )}
                   </td>

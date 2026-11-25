@@ -41,10 +41,18 @@ import {
   formatThousands,
 } from './lib/formatters';
 import { Calendar, UserCheck, AlertTriangle, CheckCircle, Copy, FileText, Save, RotateCcw, FileSpreadsheet, ShieldCheck } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { animateTabEnter, animateTabExit, animateToastEnter, gsap } from './lib/animations';
 
 const LS_SELECTED_SUP = 'mg_active_supervisora';
 const ALL_SUP = '__all';
+
+const RANKING_TABS = [
+  { id: 'dia', label: 'Día' },
+  { id: 'mes', label: 'Mes' },
+  { id: 'comparativo', label: 'vs Mes Anterior', title: 'Comparativa mes actual contra mes anterior por semanas relativas' },
+  { id: 'rango', label: 'Rango' },
+];
 
 function getSubRoute() {
   const fullPath = window.location.pathname.replace(/\/+$/, '');
@@ -162,19 +170,9 @@ export default function App() {
     }
   }, [activeTab]);
 
-  const isRankingChangingRef = useRef(false);
-
   const handleRankingViewChange = (nextView) => {
-    if (nextView === rankingView || isRankingChangingRef.current) return;
-    if (rankingContentRef.current) {
-      isRankingChangingRef.current = true;
-      animateTabExit(rankingContentRef.current, () => {
-        setRankingView(nextView);
-        isRankingChangingRef.current = false;
-      });
-    } else {
-      setRankingView(nextView);
-    }
+    if (nextView === rankingView) return;
+    setRankingView(nextView);
   };
 
   // GSAP: Animate Ranking View transitions (Mes / Día)
@@ -1266,75 +1264,65 @@ export default function App() {
                     : 'flex-row items-center justify-between sm:justify-start'
                 }`}
               >
-                {/* Switch Día / Mes / Comparativo / Rango */}
+                {/* Switch Día / Mes / Comparativo / Rango con efecto Lava Lamp */}
                 <div
-                  className={`p-1 sm:p-1.5 bg-slate-950 rounded-2xl border border-slate-800 shadow-inner ${
+                  className={`p-1 sm:p-1.5 bg-slate-950 rounded-2xl border border-slate-800 shadow-inner relative ${
                     rankingView === 'rango' || rankingView === 'comparativo'
                       ? 'w-full sm:w-auto grid grid-cols-2 sm:flex'
                       : 'flex w-fit'
                   }`}
                 >
-                  <button
-                    type="button"
-                    onClick={() => handleRankingViewChange('dia')}
-                    className={`py-2 rounded-xl text-xs sm:text-sm font-black transition active:scale-95 cursor-pointer text-center ${
-                      rankingView === 'rango' || rankingView === 'comparativo'
-                        ? 'w-full sm:w-auto px-2 sm:px-4'
-                        : 'px-3.5 sm:px-4'
-                    } ${
-                      rankingView === 'dia'
-                        ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/25 scale-[1.02]'
-                        : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
-                    }`}
-                  >
-                    Día
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleRankingViewChange('mes')}
-                    className={`py-2 rounded-xl text-xs sm:text-sm font-black transition active:scale-95 cursor-pointer text-center ${
-                      rankingView === 'rango' || rankingView === 'comparativo'
-                        ? 'w-full sm:w-auto px-2 sm:px-4'
-                        : 'px-3.5 sm:px-4'
-                    } ${
-                      rankingView === 'mes'
-                        ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/25 scale-[1.02]'
-                        : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
-                    }`}
-                  >
-                    Mes
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleRankingViewChange('comparativo')}
-                    className={`py-2 rounded-xl text-xs sm:text-sm font-black transition active:scale-95 cursor-pointer text-center ${
-                      rankingView === 'rango' || rankingView === 'comparativo'
-                        ? 'w-full sm:w-auto px-2 sm:px-4'
-                        : 'px-3.5 sm:px-4'
-                    } ${
-                      rankingView === 'comparativo'
-                        ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/25 scale-[1.02]'
-                        : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
-                    }`}
-                    title="Comparativa mes actual contra mes anterior por semanas relativas"
-                  >
-                    vs Mes Anterior
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleRankingViewChange('rango')}
-                    className={`py-2 rounded-xl text-xs sm:text-sm font-black transition active:scale-95 cursor-pointer text-center ${
-                      rankingView === 'rango' || rankingView === 'comparativo'
-                        ? 'w-full sm:w-auto px-2 sm:px-4'
-                        : 'px-3.5 sm:px-4'
-                    } ${
-                      rankingView === 'rango'
-                        ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/25 scale-[1.02]'
-                        : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
-                    }`}
-                  >
-                    Rango
-                  </button>
+                  {RANKING_TABS.map((tab) => {
+                    const isActive = rankingView === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => handleRankingViewChange(tab.id)}
+                        title={tab.title}
+                        className={`relative py-2 rounded-xl text-xs sm:text-sm font-black transition-colors duration-200 cursor-pointer text-center select-none active:scale-95 ${
+                          rankingView === 'rango' || rankingView === 'comparativo'
+                            ? 'w-full sm:w-auto px-2 sm:px-4'
+                            : 'px-3.5 sm:px-4'
+                        } ${
+                          isActive
+                            ? 'text-slate-950'
+                            : 'text-slate-400 hover:text-white hover:bg-slate-900/40'
+                        }`}
+                      >
+                        {isActive && (
+                          <>
+                            {/* Lava lamp ambient glow (efecto lámpara de lava / chupa el color) */}
+                            <motion.div
+                              layoutId="rankingLavaGlow"
+                              className="absolute inset-0 rounded-xl bg-amber-400/40 blur-md pointer-events-none"
+                              transition={{
+                                type: 'spring',
+                                stiffness: 350,
+                                damping: 25,
+                                mass: 0.8,
+                              }}
+                            />
+                            {/* Lava lamp fluid pill */}
+                            <motion.div
+                              layoutId="rankingLavaPill"
+                              className="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 shadow-lg shadow-amber-500/35 ring-1 ring-amber-300/40 pointer-events-none"
+                              transition={{
+                                type: 'spring',
+                                stiffness: 380,
+                                damping: 26,
+                                mass: 0.75,
+                              }}
+                            >
+                              {/* Top liquid shine highlight */}
+                              <div className="absolute inset-x-2 top-0.5 h-[1.5px] bg-white/45 rounded-full blur-[0.5px]" />
+                            </motion.div>
+                          </>
+                        )}
+                        <span className="relative z-10 tracking-tight">{tab.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {/* Contenedor de Botones de Exportar */}

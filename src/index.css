@@ -71,6 +71,20 @@
   animation: gsapPulseSlow 9s ease-in-out infinite;
 }
 
+/* Progress bar charging shimmer animation */
+@keyframes chargeShimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+
+.animate-charge-shimmer {
+  animation: chargeShimmer 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
 /* Custom modern scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
