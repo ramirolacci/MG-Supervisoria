@@ -18,7 +18,10 @@ import {
   ListTodo,
   User,
   ArrowLeft,
+  ChevronDown,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { animatePopoverEnter, animatePopoverExit } from '../lib/animations';
 import { api } from '../lib/api';
 import { UserAvatar } from './UserAvatar';
 import { canUserViewLiveLocations, canUserAccessSupervisionFromPlanificacion } from '../lib/auth';
@@ -88,6 +91,435 @@ const ACTS = [
   'Traslado',
   'Otro',
 ];
+
+function PlanSupervisorSelect({ value, onChange, supervisoras = [] }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+  const popoverRef = useRef(null);
+
+  const selectedSup = supervisoras.find((s) => s.id === value);
+
+  const closeDropdown = () => {
+    if (popoverRef.current) {
+      animatePopoverExit(popoverRef.current, () => setIsOpen(false));
+    } else {
+      setIsOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && popoverRef.current) {
+      animatePopoverEnter(popoverRef.current);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        closeDropdown();
+      }
+    }
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  return (
+    <div className="relative w-full sm:w-auto" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => (isOpen ? closeDropdown() : setIsOpen(true))}
+        className="bg-slate-950 border border-slate-700/80 hover:border-amber-500/80 rounded-xl px-3 py-2 text-xs sm:text-sm text-white font-bold flex items-center justify-between gap-2.5 cursor-pointer transition shadow-inner w-full sm:w-auto min-w-[180px]"
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <UserAvatar
+            user={selectedSup}
+            name={selectedSup?.name}
+            avatarColor={selectedSup?.avatarColor}
+            className="w-5 h-5 rounded-lg shrink-0"
+            textClassName="text-[10px] font-extrabold text-white"
+          />
+          <span className="truncate text-white font-bold text-xs sm:text-sm">
+            {selectedSup?.name || 'Seleccionar supervisora'}
+          </span>
+        </div>
+        <ChevronDown
+          className={`w-3.5 h-3.5 text-slate-400 group-hover:text-amber-400 transition-transform duration-200 shrink-0 ${
+            isOpen ? 'rotate-180 text-amber-400' : ''
+          }`}
+        />
+      </button>
+
+      {isOpen && (
+        <div
+          ref={popoverRef}
+          className="absolute top-full right-0 mt-2 z-50 w-full min-w-[220px] bg-slate-900/95 border border-slate-700/80 rounded-2xl p-1.5 shadow-2xl backdrop-blur-xl origin-top max-h-72 overflow-y-auto no-scrollbar"
+        >
+          <div className="space-y-0.5">
+            {supervisoras.map((s) => {
+              const isSelected = value === s.id;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => {
+                    onChange(s.id);
+                    closeDropdown();
+                  }}
+                  className={`w-full flex items-center justify-between p-2 rounded-xl transition text-left cursor-pointer ${
+                    isSelected
+                      ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300 shadow-sm'
+                      : 'hover:bg-slate-800/80 text-slate-300 hover:text-white border border-transparent'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <UserAvatar
+                      user={s}
+                      name={s.name}
+                      avatarColor={s.avatarColor}
+                      className="w-5 h-5 rounded-lg shrink-0"
+                      textClassName="text-[10px] font-extrabold text-white"
+                    />
+                    <span className="font-bold text-xs truncate">{s.name}</span>
+                  </div>
+                  {isSelected && <Check className="w-4 h-4 text-amber-400 shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PlanDaySelect({ value, onChange, currentWeek, daysOfWeek = [] }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+  const popoverRef = useRef(null);
+
+  const closeDropdown = () => {
+    if (popoverRef.current) {
+      animatePopoverExit(popoverRef.current, () => setIsOpen(false));
+    } else {
+      setIsOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && popoverRef.current) {
+      animatePopoverEnter(popoverRef.current);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        closeDropdown();
+      }
+    }
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  const selectedIndex = daysOfWeek.findIndex((_, i) => addDays(currentWeek, i) === value);
+  const selectedLabel = selectedIndex >= 0 
+    ? `${daysOfWeek[selectedIndex]} ${dd(value)}` 
+    : 'Elegí día...';
+
+  return (
+    <div className="relative w-full" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => (isOpen ? closeDropdown() : setIsOpen(true))}
+        className="w-full bg-slate-900 border border-slate-800 hover:border-amber-400 focus:border-amber-400 rounded-xl px-3 py-2 text-xs sm:text-sm text-white font-bold flex items-center justify-between gap-2 cursor-pointer transition shadow-inner"
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-5 h-5 rounded-lg bg-sky-500/15 text-sky-400 border border-sky-500/30 flex items-center justify-center shrink-0">
+            <Calendar className="w-3 h-3" />
+          </div>
+          <span className="truncate text-white font-bold text-xs sm:text-sm">{selectedLabel}</span>
+        </div>
+        <ChevronDown
+          className={`w-3.5 h-3.5 text-slate-400 group-hover:text-amber-400 transition-transform duration-200 shrink-0 ${
+            isOpen ? 'rotate-180 text-amber-400' : ''
+          }`}
+        />
+      </button>
+
+      {isOpen && (
+        <div
+          ref={popoverRef}
+          className="absolute top-full left-0 mt-2 z-50 w-full min-w-[210px] bg-slate-900/95 border border-slate-700/80 rounded-2xl p-1.5 shadow-2xl backdrop-blur-xl origin-top max-h-72 overflow-y-auto no-scrollbar"
+        >
+          <div className="space-y-0.5">
+            {daysOfWeek.map((d, i) => {
+              const dayDate = addDays(currentWeek, i);
+              const isSelected = value === dayDate;
+              const isToday = dayDate === todayStr();
+              return (
+                <button
+                  key={dayDate}
+                  type="button"
+                  onClick={() => {
+                    onChange(dayDate);
+                    closeDropdown();
+                  }}
+                  className={`w-full flex items-center justify-between p-2 rounded-xl transition text-left cursor-pointer ${
+                    isSelected
+                      ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300 shadow-sm'
+                      : 'hover:bg-slate-800/80 text-slate-300 hover:text-white border border-transparent'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-bold text-xs truncate">
+                      {d} {dd(dayDate)}
+                    </span>
+                    {isToday && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                        Hoy
+                      </span>
+                    )}
+                  </div>
+                  {isSelected && <Check className="w-4 h-4 text-amber-400 shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PlanLugarSelect({ value, onChange, tiendas = [] }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+  const popoverRef = useRef(null);
+
+  const closeDropdown = () => {
+    if (popoverRef.current) {
+      animatePopoverExit(popoverRef.current, () => setIsOpen(false));
+    } else {
+      setIsOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && popoverRef.current) {
+      animatePopoverEnter(popoverRef.current);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        closeDropdown();
+      }
+    }
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  const sortedTiendas = useMemo(() => {
+    return tiendas.slice().sort((a, b) => a.name.localeCompare(b.name, 'es'));
+  }, [tiendas]);
+
+  const getLabel = () => {
+    if (!value) return 'Elegí dónde...';
+    if (value.startsWith('t:')) {
+      const tid = value.replace('t:', '');
+      const store = tiendas.find((t) => t.id === tid);
+      return store?.name || 'Sucursal';
+    }
+    if (value === 'x:Oficina') return 'Oficina Central';
+    if (value === 'x:Traslado') return 'En traslado';
+    if (value === 'x:custom') return 'Otro (escribir)';
+    return value.replace('x:', '');
+  };
+
+  return (
+    <div className="relative w-full" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => (isOpen ? closeDropdown() : setIsOpen(true))}
+        className="w-full bg-slate-900 border border-slate-800 hover:border-amber-400 focus:border-amber-400 rounded-xl px-3 py-2 text-xs sm:text-sm text-white font-bold flex items-center justify-between gap-2 cursor-pointer transition shadow-inner"
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-5 h-5 rounded-lg bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0">
+            <MapPin className="w-3 h-3" />
+          </div>
+          <span className="truncate text-white font-bold text-xs sm:text-sm">{getLabel()}</span>
+        </div>
+        <ChevronDown
+          className={`w-3.5 h-3.5 text-slate-400 group-hover:text-amber-400 transition-transform duration-200 shrink-0 ${
+            isOpen ? 'rotate-180 text-amber-400' : ''
+          }`}
+        />
+      </button>
+
+      {isOpen && (
+        <div
+          ref={popoverRef}
+          className="absolute top-full left-0 mt-2 z-50 w-full min-w-[240px] max-w-[calc(100vw-28px)] bg-slate-900/95 border border-slate-700/80 rounded-2xl p-1.5 shadow-2xl backdrop-blur-xl origin-top max-h-72 overflow-y-auto no-scrollbar"
+        >
+          {/* Sucursales */}
+          <div className="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500">
+            Sucursales
+          </div>
+          <div className="space-y-0.5">
+            {sortedTiendas.map((t) => {
+              const val = `t:${t.id}`;
+              const isSelected = value === val;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => {
+                    onChange(val);
+                    closeDropdown();
+                  }}
+                  className={`w-full flex items-center justify-between p-2 rounded-xl transition text-left cursor-pointer ${
+                    isSelected
+                      ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300 shadow-sm'
+                      : 'hover:bg-slate-800/80 text-slate-300 hover:text-white border border-transparent'
+                  }`}
+                >
+                  <span className="font-bold text-xs truncate">{t.name}</span>
+                  {isSelected && <Check className="w-4 h-4 text-amber-400 shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="h-px bg-slate-800 my-1 mx-1" />
+
+          {/* Otros Lugares */}
+          <div className="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500">
+            Otros Lugares
+          </div>
+          <div className="space-y-0.5">
+            {[
+              { val: 'x:Oficina', label: 'Oficina Central' },
+              { val: 'x:Traslado', label: 'En traslado' },
+              { val: 'x:custom', label: 'Otro (escribir)' },
+            ].map((item) => {
+              const isSelected = value === item.val;
+              return (
+                <button
+                  key={item.val}
+                  type="button"
+                  onClick={() => {
+                    onChange(item.val);
+                    closeDropdown();
+                  }}
+                  className={`w-full flex items-center justify-between p-2 rounded-xl transition text-left cursor-pointer ${
+                    isSelected
+                      ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300 shadow-sm'
+                      : 'hover:bg-slate-800/80 text-slate-300 hover:text-white border border-transparent'
+                  }`}
+                >
+                  <span className="font-bold text-xs truncate">{item.label}</span>
+                  {isSelected && <Check className="w-4 h-4 text-amber-400 shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PlanActividadSelect({ value, onChange, actividades = [] }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+  const popoverRef = useRef(null);
+
+  const closeDropdown = () => {
+    if (popoverRef.current) {
+      animatePopoverExit(popoverRef.current, () => setIsOpen(false));
+    } else {
+      setIsOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && popoverRef.current) {
+      animatePopoverEnter(popoverRef.current);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        closeDropdown();
+      }
+    }
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  return (
+    <div className="relative w-full" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => (isOpen ? closeDropdown() : setIsOpen(true))}
+        className="w-full bg-slate-900 border border-slate-800 hover:border-amber-400 focus:border-amber-400 rounded-xl px-3 py-2 text-xs sm:text-sm text-white font-bold flex items-center justify-between gap-2 cursor-pointer transition shadow-inner"
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-5 h-5 rounded-lg bg-orange-500/15 text-orange-400 border border-orange-500/30 flex items-center justify-center shrink-0">
+            <Target className="w-3 h-3" />
+          </div>
+          <span className="truncate text-white font-bold text-xs sm:text-sm">{value || 'Seleccionar actividad'}</span>
+        </div>
+        <ChevronDown
+          className={`w-3.5 h-3.5 text-slate-400 group-hover:text-amber-400 transition-transform duration-200 shrink-0 ${
+            isOpen ? 'rotate-180 text-amber-400' : ''
+          }`}
+        />
+      </button>
+
+      {isOpen && (
+        <div
+          ref={popoverRef}
+          className="absolute top-full left-0 mt-2 z-50 w-full min-w-[220px] bg-slate-900/95 border border-slate-700/80 rounded-2xl p-1.5 shadow-2xl backdrop-blur-xl origin-top max-h-72 overflow-y-auto no-scrollbar"
+        >
+          <div className="space-y-0.5">
+            {actividades.map((a) => {
+              const isSelected = value === a;
+              return (
+                <button
+                  key={a}
+                  type="button"
+                  onClick={() => {
+                    onChange(a);
+                    closeDropdown();
+                  }}
+                  className={`w-full flex items-center justify-between p-2 rounded-xl transition text-left cursor-pointer ${
+                    isSelected
+                      ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300 shadow-sm'
+                      : 'hover:bg-slate-800/80 text-slate-300 hover:text-white border border-transparent'
+                  }`}
+                >
+                  <span className="font-bold text-xs truncate">{a}</span>
+                  {isSelected && <Check className="w-4 h-4 text-amber-400 shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function PlanificacionSupervisoras({ config = {}, currentUser, isAdmin, onNavigate }) {
   const supervisoras = config?.supervisoras || [];
@@ -730,17 +1162,11 @@ export function PlanificacionSupervisoras({ config = {}, currentUser, isAdmin, o
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider shrink-0 hidden sm:inline">
                   Supervisora:
                 </span>
-                <select
+                <PlanSupervisorSelect
                   value={selectedSupId}
-                  onChange={(e) => setSelectedSupId(e.target.value)}
-                  className="bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs sm:text-sm text-white font-bold focus:outline-none focus:border-amber-500 w-full sm:w-auto"
-                >
-                  {supervisoras.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setSelectedSupId}
+                  supervisoras={supervisoras}
+                />
               </div>
             ) : (
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800">
@@ -888,20 +1314,12 @@ export function PlanificacionSupervisoras({ config = {}, currentUser, isAdmin, o
               <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
                 Día
               </label>
-              <select
+              <PlanDaySelect
                 value={edDay}
-                onChange={(e) => setEdDay(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs sm:text-sm text-white font-bold focus:outline-none focus:border-amber-500"
-              >
-                {DOW.map((d, i) => {
-                  const dayDate = addDays(currentWeek, i);
-                  return (
-                    <option key={dayDate} value={dayDate}>
-                      {d} {dd(dayDate)}
-                    </option>
-                  );
-                })}
-              </select>
+                onChange={setEdDay}
+                currentWeek={currentWeek}
+                daysOfWeek={DOW}
+              />
             </div>
 
             {/* Desde / Hasta */}
@@ -937,25 +1355,11 @@ export function PlanificacionSupervisoras({ config = {}, currentUser, isAdmin, o
               <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
                 ¿Dónde?
               </label>
-              <select
+              <PlanLugarSelect
                 value={edLugar}
-                onChange={(e) => setEdLugar(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs sm:text-sm text-white font-bold focus:outline-none focus:border-amber-500"
-              >
-                <option value="">Elegí dónde...</option>
-                <optgroup label="Sucursales">
-                  {tiendas.map((t) => (
-                    <option key={t.id} value={`t:${t.id}`}>
-                      {t.name}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="Otros">
-                  <option value="x:Oficina">Oficina Central</option>
-                  <option value="x:Traslado">En traslado</option>
-                  <option value="x:custom">Otro (escribir)</option>
-                </optgroup>
-              </select>
+                onChange={setEdLugar}
+                tiendas={tiendas}
+              />
             </div>
 
             {/* Actividad */}
@@ -963,17 +1367,11 @@ export function PlanificacionSupervisoras({ config = {}, currentUser, isAdmin, o
               <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
                 Actividad
               </label>
-              <select
+              <PlanActividadSelect
                 value={edAct}
-                onChange={(e) => setEdAct(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs sm:text-sm text-white font-bold focus:outline-none focus:border-amber-500"
-              >
-                {ACTS.map((a) => (
-                  <option key={a} value={a}>
-                    {a}
-                  </option>
-                ))}
-              </select>
+                onChange={setEdAct}
+                actividades={ACTS}
+              />
             </div>
 
             {/* Lugar personalizado si eligió 'Otro (escribir)' */}
@@ -1116,8 +1514,8 @@ export function PlanificacionSupervisoras({ config = {}, currentUser, isAdmin, o
             </p>
           </div>
 
-          {/* Selector de día / semana completa */}
-          <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 overflow-x-auto no-scrollbar max-w-full">
+          {/* Selector de día / semana completa con efecto lámpara de lava */}
+          <div className="flex items-center gap-1.5 bg-slate-950/90 p-1.5 rounded-2xl border border-slate-800/80 overflow-x-auto no-scrollbar max-w-full relative shadow-inner">
             {DOWS.map((dayName, idx) => {
               const dayDate = addDays(currentWeek, idx);
               const isToday = dayDate === todayStr();
@@ -1128,15 +1526,48 @@ export function PlanificacionSupervisoras({ config = {}, currentUser, isAdmin, o
                   key={dayDate}
                   type="button"
                   onClick={() => setSelectedDayView(dayDate)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap transition cursor-pointer ${
+                  className={`relative px-3 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap transition cursor-pointer select-none ${
                     isSelected
-                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                      ? 'text-slate-950'
                       : isToday
-                      ? 'text-amber-400 hover:bg-slate-800/80 border border-amber-500/30'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                      ? 'text-amber-400 hover:text-amber-300 hover:bg-slate-900/60 ring-1 ring-amber-500/30'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-900/40'
                   }`}
                 >
-                  {dayName} {dd(dayDate)}
+                  {isSelected && (
+                    <>
+                      {/* Lava lamp ambient glow */}
+                      <motion.div
+                        layoutId="cronogramaLavaGlow"
+                        className="absolute inset-0 rounded-xl bg-amber-400/40 blur-md pointer-events-none"
+                        transition={{
+                          type: 'spring',
+                          stiffness: 350,
+                          damping: 25,
+                          mass: 0.8,
+                        }}
+                      />
+                      {/* Lava lamp fluid pill */}
+                      <motion.div
+                        layoutId="cronogramaLavaPill"
+                        className="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 shadow-lg shadow-amber-500/35 ring-1 ring-amber-300/40 pointer-events-none"
+                        transition={{
+                          type: 'spring',
+                          stiffness: 380,
+                          damping: 26,
+                          mass: 0.75,
+                        }}
+                      >
+                        <div className="absolute inset-x-2 top-0.5 h-[1.5px] bg-white/45 rounded-full blur-[0.5px]" />
+                      </motion.div>
+                    </>
+                  )}
+                  <span className="relative z-10 flex items-center gap-1">
+                    {dayName} {dd(dayDate)}
+                    {isToday && !isSelected && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block animate-pulse" />
+                    )}
+                  </span>
                 </button>
               );
             })}
@@ -1144,13 +1575,39 @@ export function PlanificacionSupervisoras({ config = {}, currentUser, isAdmin, o
             <button
               type="button"
               onClick={() => setSelectedDayView('semana')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition cursor-pointer ${
+              className={`relative px-3.5 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition cursor-pointer select-none ${
                 selectedDayView === 'semana'
-                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                  ? 'text-slate-950'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900/40'
               }`}
             >
-              Semana completa
+              {selectedDayView === 'semana' && (
+                <>
+                  <motion.div
+                    layoutId="cronogramaLavaGlow"
+                    className="absolute inset-0 rounded-xl bg-amber-400/40 blur-md pointer-events-none"
+                    transition={{
+                      type: 'spring',
+                      stiffness: 350,
+                      damping: 25,
+                      mass: 0.8,
+                    }}
+                  />
+                  <motion.div
+                    layoutId="cronogramaLavaPill"
+                    className="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 shadow-lg shadow-amber-500/35 ring-1 ring-amber-300/40 pointer-events-none"
+                    transition={{
+                      type: 'spring',
+                      stiffness: 380,
+                      damping: 26,
+                      mass: 0.75,
+                    }}
+                  >
+                    <div className="absolute inset-x-2 top-0.5 h-[1.5px] bg-white/45 rounded-full blur-[0.5px]" />
+                  </motion.div>
+                </>
+              )}
+              <span className="relative z-10">Semana completa</span>
             </button>
           </div>
         </div>

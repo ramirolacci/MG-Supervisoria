@@ -125,7 +125,7 @@ export function ChangePasswordModal({ currentUser, isOpen, onClose }) {
           {/* Current Password */}
           <div>
             <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-              Contraseña Actual
+              Contraseña Actual <span className="text-red-500 font-bold">*</span>
             </label>
             <div className="relative">
               <input
@@ -149,7 +149,7 @@ export function ChangePasswordModal({ currentUser, isOpen, onClose }) {
           {/* New Password */}
           <div>
             <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-              Nueva Contraseña
+              Nueva Contraseña <span className="text-red-500 font-bold">*</span>
             </label>
             <div className="relative">
               <input
@@ -173,7 +173,7 @@ export function ChangePasswordModal({ currentUser, isOpen, onClose }) {
           {/* Confirm New Password */}
           <div>
             <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-              Confirmar Nueva Contraseña
+              Confirmar Nueva Contraseña <span className="text-red-500 font-bold">*</span>
             </label>
             <div className="relative">
               <input
