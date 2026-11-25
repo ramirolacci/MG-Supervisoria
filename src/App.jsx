@@ -1087,7 +1087,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between">
+    <div className="min-h-screen bg-transparent text-slate-100 flex flex-col justify-between">
       {/* Top Brand Navigation */}
       <Header
         currentUser={currentUser}
@@ -1601,10 +1601,10 @@ export default function App() {
             <button
               type="button"
               onClick={() => setIsExcelModalOpen(true)}
-              className="w-auto px-4 py-2 sm:py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 border border-emerald-500/50 hover:border-emerald-400 text-emerald-300 hover:text-white font-extrabold text-xs sm:text-sm inline-flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/40 transition active:scale-95 cursor-pointer shrink-0"
+              className="w-auto px-4 py-2 sm:py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm inline-flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all duration-200 active:scale-95 cursor-pointer shrink-0"
               title="Importar comandas, ventas y unidades desde planilla Excel"
             >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-400 shrink-0" />
+              <FileSpreadsheet className="w-4 h-4 text-slate-950 shrink-0" />
               <span>Importar Excel</span>
             </button>
           </div>
@@ -1699,7 +1699,7 @@ export default function App() {
                 }`}
                 title={dirtyStoreIds.size > 0 ? `Guardar ${dirtyStoreIds.size} cambios` : 'No hay cambios para guardar'}
               >
-                <Save className="w-4 h-4 shrink-0" />
+                <Save className={`w-4 h-4 shrink-0 ${dirtyStoreIds.size > 0 ? 'text-slate-950' : 'text-slate-500'}`} />
                 <span className="truncate">
                   {isSaving
                     ? 'Guardando...'
@@ -1713,10 +1713,10 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setIsExcelModalOpen(true)}
-                className="py-3 px-2 sm:px-4 rounded-2xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-800/60 hover:border-emerald-500/60 text-emerald-300 hover:text-white font-bold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 shadow-md shadow-emerald-950/30 cursor-pointer"
+                className="py-3 px-2 sm:px-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 shadow-lg shadow-emerald-500/25 cursor-pointer"
                 title="Importar carga diaria desde planilla Excel"
               >
-                <FileSpreadsheet className="w-4 h-4 text-emerald-400 shrink-0" />
+                <FileSpreadsheet className="w-4 h-4 text-slate-950 shrink-0" />
                 <span className="truncate">Importar Excel</span>
               </button>
 
@@ -1725,14 +1725,14 @@ export default function App() {
                 type="button"
                 onClick={handleDiscardChanges}
                 disabled={dirtyStoreIds.size === 0 || isSaving}
-                className={`py-3 px-2 sm:px-4 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 shadow-md ${
+                className={`py-3 px-2 sm:px-4 rounded-2xl font-black text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 shadow-xl ${
                   dirtyStoreIds.size > 0
-                    ? 'bg-rose-950/40 hover:bg-rose-900/50 border border-rose-800/70 text-rose-300 hover:text-white shadow-rose-950/30 active:scale-95 cursor-pointer'
+                    ? 'bg-rose-500 hover:bg-rose-400 text-slate-950 shadow-rose-500/25 active:scale-95 cursor-pointer'
                     : 'bg-slate-900/40 border border-slate-800/60 text-slate-600 cursor-not-allowed opacity-50'
                 }`}
                 title={dirtyStoreIds.size > 0 ? 'Descartar cambios no guardados' : 'Sin cambios pendientes para descartar'}
               >
-                <RotateCcw className="w-4 h-4 shrink-0" />
+                <RotateCcw className={`w-4 h-4 shrink-0 ${dirtyStoreIds.size > 0 ? 'text-slate-950' : 'text-slate-600'}`} />
                 <span className="truncate">Descartar</span>
               </button>
 
@@ -1740,7 +1740,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={handleCopyWhatsApp}
-                className="py-3 px-2 sm:px-4 rounded-2xl bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-800/70 text-emerald-400 font-bold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 shadow-md shadow-emerald-950/30 cursor-pointer"
+                className="py-3 px-2 sm:px-4 rounded-2xl bg-green-500 hover:bg-green-400 text-slate-950 font-black text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 shadow-lg shadow-green-500/25 cursor-pointer"
                 title="Copiar resumen para WhatsApp"
               >
                 <span className="text-base shrink-0 leading-none">📱</span>
@@ -1751,7 +1751,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={handleExportDayCsv}
-                className="py-3 px-2 sm:px-4 rounded-2xl bg-slate-950/80 hover:bg-slate-900 border border-slate-800 text-slate-300 font-bold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 shadow-md shadow-black/40 cursor-pointer"
+                className="py-3 px-2 sm:px-4 rounded-2xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 shadow-lg shadow-sky-500/25 cursor-pointer"
                 title="Exportar a CSV / Excel"
               >
                 <span className="text-base shrink-0 leading-none">📊</span>

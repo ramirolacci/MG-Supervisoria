@@ -13,6 +13,10 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-color: #0b1325;
+    background-image: linear-gradient(180deg, #0b1325 0%, #0f1c34 45%, #152544 100%);
+    background-attachment: fixed;
+    color: #f1f5f9;
   }
   
   .font-mono-numbers {

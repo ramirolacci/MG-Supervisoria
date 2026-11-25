@@ -48,7 +48,7 @@ export function Header({
   const canAccessSupervision = canUserAccessSupervisionFromPlanificacion(currentUser);
 
   return (
-    <header className="sticky top-0 z-30 backdrop-blur-md bg-slate-950/80 border-b border-slate-800/80">
+    <header className="sticky top-0 z-30 backdrop-blur-xl bg-slate-900/80 border-b border-slate-800/80 shadow-md">
       <div className="max-w-[1600px] mx-auto px-2.5 sm:px-6 lg:px-8 py-2.5 sm:py-4 flex items-center justify-between gap-4">
         {/* Brand */}
         <div className="flex flex-col">

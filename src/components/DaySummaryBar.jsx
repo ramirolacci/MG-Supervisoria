@@ -42,9 +42,9 @@ export function DaySummaryBar({
 
   return (
     <div className="space-y-4">
-      {/* 1. STICKY TOP BAR: Title & Loaded Progress */}
-      <div className="sticky top-[53px] sm:top-[70px] z-20 bg-slate-950/95 backdrop-blur-md border-y border-slate-800/80 -mx-2 sm:-mx-6 lg:-mx-8 px-2.5 sm:px-6 lg:px-8 py-2.5 sm:py-3 shadow-2xl transition-all duration-300">
-        <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-3">
+      {/* 1. STICKY TOP BAR: Title & Loaded Progress en contenedor alineado */}
+      <div className="sticky top-[53px] sm:top-[70px] z-20 bg-slate-900/80 backdrop-blur-xl border border-slate-800/80 rounded-2xl px-4 sm:px-6 py-3 shadow-xl transition-all duration-300">
+        <div className="flex items-center justify-between gap-3">
           {/* Title & Progress */}
           <div className="flex items-center gap-2 min-w-0">
             <h2 className="text-sm sm:text-base md:text-lg font-bold text-white flex items-center gap-2 truncate">
@@ -52,28 +52,28 @@ export function DaySummaryBar({
               {isAllLoaded && (
                 <span
                   ref={badgeRef}
-                  className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0"
                 >
-                  <CheckCircle2 className="w-3 h-3" />
+                  <CheckCircle2 className="w-3.5 h-3.5" />
                   100% Completo
                 </span>
               )}
             </h2>
           </div>
 
-          <div className="text-xs font-semibold shrink-0 flex items-center gap-2">
+          <div className="text-xs font-semibold shrink-0 flex items-center gap-2.5">
             <span
               className={
                 totalStores === 0
                   ? 'text-slate-500'
                   : isAllLoaded
-                  ? 'text-emerald-400'
-                  : 'text-amber-400'
+                  ? 'text-emerald-400 font-bold'
+                  : 'text-amber-400 font-bold'
               }
             >
               {loadedStores} de {totalStores} tiendas cargadas
             </span>
-            <div className="w-16 sm:w-28 bg-slate-800 rounded-full h-1.5 overflow-hidden hidden sm:block">
+            <div className="w-16 sm:w-28 bg-slate-800/80 rounded-full h-1.5 overflow-hidden hidden sm:block border border-slate-700/40">
               <div
                 className={`h-full transition-all duration-500 rounded-full ${
                   isAllLoaded ? 'bg-emerald-400' : 'bg-amber-500'
