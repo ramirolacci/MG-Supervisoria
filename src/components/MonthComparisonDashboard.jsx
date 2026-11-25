@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ARS, INT, DEC, fmtDay, pad, parseYmd, exportCsv, getCardNumberFontSize } from '../lib/formatters';
+import { motion } from 'framer-motion';
 import { CustomMonthPicker } from './CustomMonthPicker';
 import { CustomSupervisorSelect } from './CustomSupervisorSelect';
+import { CustomStoreSelect } from './CustomStoreSelect';
 import { api } from '../lib/api';
 import { gsap, useGSAP } from '../lib/animations';
 import { AnimatedNumber } from './AnimatedNumber';
@@ -421,31 +423,21 @@ export function MonthComparisonDashboard({
             />
           </div>
 
-          {/* Filtro Tienda */}
+          {/* Filtro Tienda Estilizado */}
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <span className="text-xs font-bold text-slate-400">Tienda:</span>
-            <select
+            <CustomStoreSelect
               value={selectedTiendaId}
-              onChange={(e) => setSelectedTiendaId(e.target.value)}
-              className="bg-slate-950 border border-slate-800 text-slate-200 text-xs sm:text-sm rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/50 cursor-pointer w-full sm:w-auto"
-            >
-              <option value="">
-                {selectedSup === '__all' ? 'Todas las tiendas' : 'Todas las tiendas asignadas'}
-              </option>
-              {visibleTiendas
-                .slice()
-                .sort((a, b) => a.name.localeCompare(b.name, 'es'))
-                .map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-            </select>
+              onChange={setSelectedTiendaId}
+              tiendas={visibleTiendas}
+              allOptionLabel={selectedSup === '__all' ? 'Todas las tiendas' : 'Todas las tiendas asignadas'}
+              className="w-full sm:w-56"
+            />
           </div>
         </div>
 
-        {/* Filtro Selector de Métrica */}
-        <div className="flex items-center gap-1.5 p-1 bg-slate-950 rounded-xl border border-slate-800 w-full sm:w-auto justify-center">
+        {/* Filtro Selector de Métrica con efecto Lava Lamp */}
+        <div className="p-1 sm:p-1.5 bg-slate-950 rounded-2xl border border-slate-800 shadow-inner relative flex items-center w-full sm:w-auto justify-center">
           {[
             { id: 'v', label: 'Venta', icon: DollarSign },
             { id: 'c', label: 'Comandas', icon: Receipt },
@@ -459,14 +451,45 @@ export function MonthComparisonDashboard({
                 key={m.id}
                 type="button"
                 onClick={() => setMetric(m.id)}
-                className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition active:scale-95 cursor-pointer ${
+                className={`relative py-2 px-3 sm:px-3.5 rounded-xl text-xs sm:text-sm font-black transition-colors duration-200 cursor-pointer text-center select-none active:scale-95 flex items-center gap-1.5 ${
                   active
-                    ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
+                    ? 'text-slate-950'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-900/40'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{m.label}</span>
+                {active && (
+                  <>
+                    {/* Lava lamp ambient glow (chupa el color) */}
+                    <motion.div
+                      layoutId="metricLavaGlow"
+                      className="absolute inset-0 rounded-xl bg-amber-400/40 blur-md pointer-events-none"
+                      transition={{
+                        type: 'spring',
+                        stiffness: 350,
+                        damping: 25,
+                        mass: 0.8,
+                      }}
+                    />
+                    {/* Lava lamp fluid pill */}
+                    <motion.div
+                      layoutId="metricLavaPill"
+                      className="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 shadow-lg shadow-amber-500/35 ring-1 ring-amber-300/40 pointer-events-none"
+                      transition={{
+                        type: 'spring',
+                        stiffness: 380,
+                        damping: 26,
+                        mass: 0.75,
+                      }}
+                    >
+                      {/* Top liquid shine highlight */}
+                      <div className="absolute inset-x-2 top-0.5 h-[1.5px] bg-white/45 rounded-full blur-[0.5px]" />
+                    </motion.div>
+                  </>
+                )}
+                <span className="relative z-10 flex items-center gap-1.5 tracking-tight">
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{m.label}</span>
+                </span>
               </button>
             );
           })}
@@ -652,7 +675,7 @@ export function MonthComparisonDashboard({
             </div>
 
             {/* Visualizador de barras compactas día a día */}
-            <div className="h-44 flex items-end gap-1 sm:gap-1.5 pt-4 border-b border-slate-800 overflow-x-auto px-1">
+            <div className="h-44 flex items-end gap-1 sm:gap-1.5 pt-4 border-b border-slate-800 overflow-x-auto no-scrollbar px-1">
               {compDaysList.map((d) => {
                 const aVal = d.closed && d.a && d.a.n ? mOf(d.a, metric) : 0;
                 const bVal = d.b && d.b.n ? mOf(d.b, metric) : 0;
@@ -703,7 +726,7 @@ export function MonthComparisonDashboard({
           </p>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto no-scrollbar">
           <table className="w-full text-left border-collapse text-xs sm:text-sm font-mono-numbers">
             <thead>
               <tr className="border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400 bg-slate-950/40">
@@ -844,7 +867,7 @@ export function MonthComparisonDashboard({
           </p>
         </div>
 
-        <div className="overflow-x-auto max-h-[460px]">
+        <div className="overflow-x-auto max-h-[460px] no-scrollbar">
           <table className="w-full text-left border-collapse text-xs sm:text-sm font-mono-numbers">
             <thead className="sticky top-0 bg-slate-950 z-10">
               <tr className="border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400">
@@ -939,7 +962,7 @@ export function MonthComparisonDashboard({
           </p>
         </div>
 
-        <div className="overflow-x-auto max-h-[460px]">
+        <div className="overflow-x-auto max-h-[460px] no-scrollbar">
           <table className="w-full text-left border-collapse text-xs sm:text-sm font-mono-numbers">
             <thead className="sticky top-0 bg-slate-950 z-10">
               <tr className="border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400">

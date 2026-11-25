@@ -851,7 +851,7 @@ export function HistoryRecordsSection({
 
       {/* Tabla Principal de Registros Históricos */}
       <div className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto no-scrollbar">
           <table className="w-full text-left text-sm font-mono-numbers">
             <thead className="bg-slate-950/90 text-[11px] uppercase tracking-wider font-semibold text-slate-400 border-b border-slate-800 font-sans">
               <tr>

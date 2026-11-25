@@ -67,7 +67,7 @@ export function StoreRow({
     >
       {/* Top line: Name & Status & Live indicators */}
       <div className="flex items-center justify-between gap-2 mb-2.5 sm:mb-3 min-w-0">
-        <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 overflow-x-auto scrollbar-none py-0.5">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 overflow-x-auto no-scrollbar py-0.5">
           <div className="p-1 sm:p-1.5 rounded-lg bg-slate-800 text-slate-300 shrink-0">
             <Store className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
           </div>

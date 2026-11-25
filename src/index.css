@@ -105,11 +105,22 @@
   background: rgba(148, 163, 184, 0.6);
 }
 
-/* Ocultar barra de scroll preservando funcionalidad de scroll */
-.no-scrollbar {
-  -ms-overflow-style: none; /* IE y Edge */
-  scrollbar-width: none; /* Firefox */
+/* Ocultar barra de scroll preservando funcionalidad de scroll en tablas, grillas y contenedores */
+.no-scrollbar,
+.scrollbar-none,
+.overflow-x-auto,
+table,
+.grilla {
+  -ms-overflow-style: none !important; /* IE y Edge */
+  scrollbar-width: none !important; /* Firefox */
 }
-.no-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Edge Chromium */
+
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar,
+.overflow-x-auto::-webkit-scrollbar,
+table::-webkit-scrollbar,
+.grilla::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Edge Chromium */
+  width: 0 !important;
+  height: 0 !important;
 }

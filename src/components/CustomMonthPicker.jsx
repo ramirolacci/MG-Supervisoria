@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { animatePopoverEnter, animatePopoverExit } from '../lib/animations';
 
 const MONTH_NAMES = [
@@ -82,10 +82,19 @@ export function CustomMonthPicker({ value, onChange }) {
             setIsOpen(true);
           }
         }}
-        className="flex items-center gap-2 bg-slate-950 border border-slate-800 hover:border-amber-500/50 rounded-xl px-3.5 py-1.5 text-xs text-amber-400 font-extrabold focus:outline-none transition shadow-inner group"
+        className="flex items-center gap-2 px-3.5 sm:px-4 py-2 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-amber-400/80 rounded-xl text-xs sm:text-sm font-extrabold text-white transition shadow-lg shadow-black/30 active:scale-95 cursor-pointer group focus:outline-none"
       >
-        <Calendar className="w-3.5 h-3.5 text-amber-400" />
-        <span className="capitalize">{displayText}</span>
+        <div className="p-1 rounded-lg bg-amber-500/15 text-amber-400 border border-amber-500/30 group-hover:scale-105 transition-transform">
+          <Calendar className="w-3.5 h-3.5 text-amber-400" />
+        </div>
+        <span className="capitalize tracking-tight text-slate-100 group-hover:text-amber-300 transition-colors">
+          {displayText}
+        </span>
+        <ChevronDown
+          className={`w-3.5 h-3.5 text-slate-400 group-hover:text-amber-400 transition-transform duration-200 ml-0.5 ${
+            isOpen ? 'rotate-180 text-amber-400' : ''
+          }`}
+        />
       </button>
 
       {/* Popover Dropdown */}

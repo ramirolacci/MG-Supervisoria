@@ -260,7 +260,7 @@ export function RangeReportDashboard({
               </p>
             </div>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto no-scrollbar">
             <table className="w-full text-left text-sm font-mono-numbers">
               <thead className="bg-slate-950/80 text-[11px] uppercase tracking-wider font-semibold text-slate-400 border-b border-slate-800">
                 <tr>
@@ -336,7 +336,7 @@ export function RangeReportDashboard({
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto no-scrollbar">
           <table className="w-full text-left text-sm font-mono-numbers">
             <thead className="bg-slate-950/80 text-[11px] uppercase tracking-wider font-semibold text-slate-400 border-b border-slate-800">
               <tr>
@@ -456,7 +456,7 @@ export function RangeReportDashboard({
           </h3>
           <p className="text-xs text-slate-400">Comportamiento día por día dentro de las fechas seleccionadas</p>
         </div>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto no-scrollbar">
           <table className="w-full text-left text-sm font-mono-numbers">
             <thead className="bg-slate-950/80 text-[11px] uppercase tracking-wider font-semibold text-slate-400 border-b border-slate-800">
               <tr>

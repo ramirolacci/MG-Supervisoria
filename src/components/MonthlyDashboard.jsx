@@ -214,7 +214,7 @@ export function MonthlyDashboard({
             <h3 className="text-base font-bold text-white">Ranking Mensual por Supervisora</h3>
             <p className="text-xs text-slate-400">Comparativa de desempeño del equipo</p>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto no-scrollbar">
             <table className="w-full text-left text-sm font-mono-numbers">
               <thead className="bg-slate-950/80 text-[11px] uppercase tracking-wider font-semibold text-slate-400 border-b border-slate-800">
                 <tr>
@@ -253,7 +253,7 @@ export function MonthlyDashboard({
           <h3 className="text-base font-bold text-white">Ranking del Mes por Tienda</h3>
           <p className="text-xs text-slate-400">Total acumulado de días cargados en el mes seleccionado</p>
         </div>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto no-scrollbar">
           <table className="w-full text-left text-sm font-mono-numbers">
             <thead className="bg-slate-950/80 text-[11px] uppercase tracking-wider font-semibold text-slate-400 border-b border-slate-800">
               <tr>
@@ -326,7 +326,7 @@ export function MonthlyDashboard({
           <h3 className="text-base font-bold text-white">Detalle Día por Día</h3>
           <p className="text-xs text-slate-400">Totales diarios registrados en el mes</p>
         </div>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto no-scrollbar">
           <table className="w-full text-left text-sm font-mono-numbers">
             <thead className="bg-slate-950/80 text-[11px] uppercase tracking-wider font-semibold text-slate-400 border-b border-slate-800">
               <tr>

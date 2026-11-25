@@ -1117,7 +1117,7 @@ export function PlanificacionSupervisoras({ config = {}, currentUser, isAdmin, o
           </div>
 
           {/* Selector de día / semana completa */}
-          <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 overflow-x-auto max-w-full">
+          <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 overflow-x-auto no-scrollbar max-w-full">
             {DOWS.map((dayName, idx) => {
               const dayDate = addDays(currentWeek, idx);
               const isToday = dayDate === todayStr();
@@ -1158,7 +1158,7 @@ export function PlanificacionSupervisoras({ config = {}, currentUser, isAdmin, o
         {/* CONTENIDO DEL CRONOGRAMA */}
         {selectedDayView === 'semana' ? (
           /* TABLA DE SEMANA COMPLETA */
-          <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/60 shadow-inner">
+          <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/60 shadow-inner no-scrollbar">
             <table className="w-full text-left text-xs border-collapse min-w-[900px]">
               <thead>
                 <tr className="bg-slate-900 border-b border-slate-800 text-[11px] font-black uppercase tracking-wider text-slate-400">
