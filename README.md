@@ -41,15 +41,20 @@
   - Diferenciación visual de tiendas propias, franquicias y locales *Experience*.
   - Perfiles de supervisión con avatares fotográficos integrados.
 
+- **📅 Planificación y Cronograma de Visitas**:
+  - Panel unificado de objetivos semanales por supervisora con seguimiento interactivo de cumplimiento.
+  - Registro de horarios de visita y actividades especializadas (auditoría, capacitación, relevamiento) por sucursal.
+  - Monitoreo en vivo *"¿Dónde está cada una ahora?"* con geolocalización operativa y cronograma semanal con selector fluido.
+
 - **📜 Historial, Auditoría y Analítica Contextual**:
   - Registro cronológico integral de todas las cargas operativas de la red.
   - Filtros multicriterio por período mensual, supervisora y búsqueda inteligente.
   - Modales de análisis profundo con cálculo de ratios de rendimiento, barras evolutivas comparativas e incremento animado de métricas numéricas.
 
 - **✨ Experiencia de Usuario Premium**:
-  - Animaciones micro-interactivas fluidas potenciadas por GSAP.
+  - Animaciones micro-interactivas fluidas potenciadas por GSAP y Framer Motion (efecto lámpara de lava, transiciones suaves).
   - Notificaciones toast dinámicas y efectos de celebración al consolidar cargas.
-  - Interfaz oscura (*dark-mode*) de alta gama orientada a la eficiencia y comodidad visual.
+  - Interfaz oscura (*dark-mode*) de alta gama con estética de cristal y gradientes corporativos.
 
 ---
 
@@ -57,20 +62,25 @@
 
 <div align="center">
 
-### Línea 1 · Acceso Corporativo & Panel de Carga Diaria
+### 1 · Acceso Corporativo & Panel de Carga Diaria
 | Autenticación Segura | Carga Diaria & KPIs Operativos |
 | :---: | :---: |
-| <img src="public/screenshots/Screenshot_1.png" alt="Pantalla de Inicio de Sesión" width="100%" /> | <img src="public/screenshots/Screenshot_2.png" alt="Panel de Carga Diaria" width="100%" /> |
+| <img src="public/screenshots/Screenshot_5.png" alt="Pantalla de Inicio de Sesión" width="100%" /> | <img src="public/screenshots/Screenshot_6.png" alt="Panel de Carga Diaria" width="100%" /> |
 
-### Línea 2 · Métricas de Rendimiento & Tablero Kanban
-| Ranking & Métricas Mensuales | Tablero Kanban de Supervisión |
+### 2 · Métricas de Rendimiento & Tablero Kanban
+| Ranking & Métricas Acumuladas | Tablero Kanban de Supervisión |
 | :---: | :---: |
-| <img src="public/screenshots/Screenshot_3.png" alt="Ranking y Métricas" width="100%" /> | <img src="public/screenshots/Screenshot_4.png" alt="Sucursales y Supervisores" width="100%" /> |
+| <img src="public/screenshots/Screenshot_7.png" alt="Ranking y Métricas de Rendimiento" width="100%" /> | <img src="public/screenshots/Screenshot_8.png" alt="Sucursales y Supervisores" width="100%" /> |
 
-### Línea 3 · Historial de Cargas & Análisis Detallado
-| Historial Integral con Filtros | Detalle Analítico & Evolución |
+### 3 · Historial de Cargas & Planificación Semanal
+| Historial Integral con Filtros | Planificación Semanal de Supervisoras |
 | :---: | :---: |
-| <img src="public/screenshots/Screenshot_5.png" alt="Historial de Cargas" width="100%" /> | <img src="public/screenshots/Screenshot_6.png" alt="Detalle y Gráficos Evolutivos" width="100%" /> |
+| <img src="public/screenshots/Screenshot_9.png" alt="Historial de Cargas" width="100%" /> | <img src="public/screenshots/Screenshot_10.png" alt="Planificación Semanal de Visitas y Objetivos" width="100%" /> |
+
+### 4 · Seguridad & Gestión de Credenciales
+| Cambio Seguro de Contraseña |
+| :---: |
+| <img src="public/screenshots/Screenshot_11.png" alt="Modal de Cambio de Contraseña" width="80%" /> |
 
 </div>
 
